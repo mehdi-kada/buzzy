@@ -1,19 +1,22 @@
 'use client';
 
-import { account } from '@/lib/appwrite';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const { logout } = useAuth();
+
   const handleLogout = async () => {
     setIsLoading(true);
-
     try {
-      await account.deleteSessions();
-      // Clear any client-side state if needed
+      const result = await logout();
+      if (!result.success) {
+        console.error('Logout failed:', result.error);
+      }
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);

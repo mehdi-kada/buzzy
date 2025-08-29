@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { account } from '@/lib/appwrite';
+import { account } from '@/lib/appwrite'; // Used for potential other client utilities
 import { Models } from 'appwrite';
 
 interface AuthContextType {
@@ -26,9 +26,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const checkAuth = async () => {
     try {
-      const userData = await account.get();
-      setUser(userData);
-    } catch (error) {
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
+      const data = await res.json();
+      setUser(data.user || null);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -37,9 +38,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string) => {
     try {
-      await account.createEmailPasswordSession(email, password);
-      const userData = await account.get();
-      setUser(userData);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!data.success) return { success: false, error: data.error };
+      await checkAuth();
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -48,8 +54,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const register = async (email: string, password: string, name: string) => {
     try {
-      await account.create('unique()', email, password, name);
-      return await login(email, password);
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+      const data = await res.json();
+      if (!data.success) return { success: false, error: data.error };
+      await checkAuth();
+      return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -57,7 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await account.deleteSessions();
+      await fetch('/api/auth/logout', { method: 'POST' });
       setUser(null);
       return { success: true };
     } catch (error: any) {
@@ -67,10 +80,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = async (email: string) => {
     try {
-      await account.createRecovery(
-        email,
-        `${window.location.origin}/reset-password`
-      );
+      const res = await fetch('/api/auth/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!data.success) return { success: false, error: data.error };
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };

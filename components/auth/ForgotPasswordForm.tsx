@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { account } from '@/lib/appwrite';
 import Link from 'next/link';
 
 export default function ForgotPasswordForm() {
@@ -17,13 +16,19 @@ export default function ForgotPasswordForm() {
     setMessage('');
 
     try {
-      await account.createRecovery(
-        email,
-        `${window.location.origin}/reset-password`
-      );
-      setMessage('Password reset email sent! Check your inbox.');
+      const res = await fetch('/api/auth/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error || 'Failed to send email');
+      } else {
+        setMessage('Password reset email sent! Check your inbox.');
+      }
     } catch (error: any) {
-      setError(error.message);
+      setError(error?.message || 'Failed to send email');
     } finally {
       setIsLoading(false);
     }

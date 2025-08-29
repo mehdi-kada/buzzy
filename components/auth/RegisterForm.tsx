@@ -140,7 +140,7 @@ export default function RegisterForm() {
 
       <div className="mt-4 text-center">
         <span className="text-sm text-gray-600">Already have an account? </span>
-        <Link href="/register" className="text-sm text-blue-600 hover:text-blue-500">
+        <Link href="/login" className="text-sm text-blue-600 hover:text-blue-500">
           Sign in
         </Link>
       </div>
