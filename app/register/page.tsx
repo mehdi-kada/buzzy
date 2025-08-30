@@ -1,9 +1,23 @@
-import { getLoggedInUser } from '@/lib/server/appwrite';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import RegisterForm from '@/components/auth/RegisterForm';
 
-export default async function SignUpPage() {
-  const user = await getLoggedInUser();
-  if (user) redirect('/dashboard');
+export default function SignUpPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
+
+  if (user) {
+    return null;
+  }
+
   return <RegisterForm />;
 }

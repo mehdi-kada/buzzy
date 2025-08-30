@@ -1,3 +1,6 @@
+// This file is no longer used as we've moved to client-side authentication
+// Keeping it for reference but it's not actively used in the application
+
 import { Client, Account, Users } from 'node-appwrite';
 import { cookies } from 'next/headers';
 

@@ -10,16 +10,14 @@ export default function OAuthSuccess() {
   useEffect(() => {
     const handleOAuthSuccess = async () => {
       try {
-        // Get the current session
-        const session = await account.getSession('current');
-
-        // Store session in cookie (if using server-side auth)
-        if (session) {
-          // Redirect to dashboard
+        // Check if we have a valid session
+        try {
+          await account.getSession('current');
           router.push('/dashboard');
+        } catch {
+          router.push('/login?error=oauth_failed');
         }
       } catch (error) {
-        console.error('OAuth success error:', error);
         router.push('/login?error=oauth_failed');
       }
     };

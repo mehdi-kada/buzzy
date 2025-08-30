@@ -15,11 +15,11 @@ export default function LogoutButton() {
     try {
       const result = await logout();
       if (!result.success) {
-        console.error('Logout failed:', result.error);
+        // Handle logout failure silently or show user-friendly message
       }
       router.push('/login');
     } catch (error) {
-      console.error('Logout error:', error);
+      // Handle logout error silently or show user-friendly message
     } finally {
       setIsLoading(false);
     }

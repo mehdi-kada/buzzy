@@ -1,9 +1,23 @@
-import { getLoggedInUser } from '@/lib/server/appwrite';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import LoginForm from '@/components/auth/LoginForm';
 
-export default async function LoginPage() {
-  const user = await getLoggedInUser();
-  if (user) redirect('/dashboard');
+export default function LoginPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
+
+  if (user) {
+    return null;
+  }
+
   return <LoginForm />;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function ForgotPasswordForm() {
@@ -9,29 +10,22 @@ export default function ForgotPasswordForm() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const { resetPassword } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     setMessage('');
 
-    try {
-      const res = await fetch('/api/auth/recover', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setError(data.error || 'Failed to send email');
-      } else {
-        setMessage('Password reset email sent! Check your inbox.');
-      }
-    } catch (error: any) {
-      setError(error?.message || 'Failed to send email');
-    } finally {
-      setIsLoading(false);
+    const result = await resetPassword(email);
+    if (!result.success) {
+      setError(result.error || 'Failed to send email');
+    } else {
+      setMessage('Password reset email sent! Check your inbox.');
     }
+    
+    setIsLoading(false);
   };
 
   return (
