@@ -1,6 +1,9 @@
 "use client";
 
 import { useVideoUpload } from "@/hooks/useVideoUpload";
+import { storage } from "@/lib/appwrite";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const VideoUploader = () => {
   const {
@@ -17,6 +20,53 @@ const VideoUploader = () => {
     handleUpload,
     resetUpload
   } = useVideoUpload();
+
+  const router = useRouter();
+
+useEffect(() => {
+  if (!uploadResult) return;
+
+  const bucketId = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!;
+  const fileId = uploadResult.videoId; // ensure this matches the file $id (sometimes it's uploadResult.file.$id)
+
+  let cancelled = false;
+
+  const load = async () => {
+    try {
+      // For a playable/streamable link use getFileView; for forced download use getFileDownload
+      const url = storage.getFileView(bucketId, fileId);
+      console.log("video url:", url);
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ audioUrl: url }),
+      });
+      if (cancelled) return;
+
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.status} ${response.statusText}`);
+      }
+
+      const transcripts = await response.json();
+      if (transcripts.error) {
+        throw new Error(`Transcription error: ${transcripts.error}`);
+      }
+      console.log("transcripts:", transcripts); 
+      // Optional redirect after a delay:
+      // setTimeout(() => router.replace(`/editing/${fileId}`), 800);
+    } catch (err) {
+      if (!cancelled) console.error("Failed to build video URL:", err);
+    }
+  };
+
+  load();
+
+  return () => {
+    cancelled = true;
+  };
+}, [uploadResult]);
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">

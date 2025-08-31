@@ -77,26 +77,22 @@ export const useVideoUpload = () => {
       category: metadata.category,
       isPublic: metadata.isPublic,
       onProgress: (p: UploadProgress) => {
-        // Handle different progress formats from Appwrite
+
         if (p && typeof p === 'object') {
           const progressData = p as any;
           
-          // Check for direct progress property
           if (typeof progressData.progress === 'number') {
             const progress = Math.round(progressData.progress);
             setUploadProgress(progress);
           }
-          // Check for loaded/total properties
           else if (typeof progressData.loaded === 'number' && typeof progressData.total === 'number' && progressData.total > 0) {
             const progress = Math.min(100, Math.round((progressData.loaded / progressData.total) * 100));
             setUploadProgress(progress);
           }
-          // Check for $id property (might indicate completion)
           else if (progressData.$id) {
             setUploadProgress(100);
           }
           else {
-            // Set some progress to show activity
             setUploadProgress(prev => Math.min(99, prev + 1));
           }
         }

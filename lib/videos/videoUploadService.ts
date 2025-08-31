@@ -4,31 +4,23 @@ import { getVideoDuration, validateVideoFile } from "./videoValidation";
 import { UploadVideoMetadata, UploadVideoResult } from "@/interfaces/videoUpload";
 
 
-
-
-
 export class VideoUploadService {
   /**
    * Upload a video file and create its document record.
    */
   static async uploadVideo(file: File, metadata: UploadVideoMetadata = {}): Promise<UploadVideoResult> {
     try {
-      // Step 1: Resolve current user
       const user = await account.get();
       
-      // Step 2: Validate the video file
       const validation = validateVideoFile(file);
       if (!validation.isValid) {
         throw new Error(validation.errors.join(", "));
       }
 
-      // Step 3: Get video duration
       const duration = await getVideoDuration(file as any as Blob);
 
-      // Step 4: Generate unique ID for the video
       const videoId = ID.unique();
 
-      // Step 5: Upload file to Appwrite Storage
       let uploadResult;
       try {
         uploadResult = await storage.createFile(
@@ -39,7 +31,7 @@ export class VideoUploadService {
             Permission.read(Role.any()),
             Permission.write(Role.user(user.$id))
           ],
-          metadata.onProgress
+           metadata.onProgress
         );
       } catch (uploadError: any) {
         // If permissions error, try without explicit permissions
@@ -76,7 +68,6 @@ export class VideoUploadService {
         videoId,
         {
           userId: user.$id,
-          fileId: uploadResult.$id,
           title,
           description: metadata.description || "",
           fileName: uploadResult.name,

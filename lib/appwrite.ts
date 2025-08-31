@@ -8,9 +8,10 @@ export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
 
-export const BUCKET_ID = '68b2ea8d001162d1006d';
-export const DATABASE_ID = '68b2d533003210de565e';
-export const VIDEOS_COLLECTION_ID = 'videos';
+// IDs now sourced from environment variables instead of hardcoded values
+export const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!;
+export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+export const VIDEOS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_VIDEOS_COLLECTION_ID!;
 
 export const config = {
   databaseId: DATABASE_ID,
