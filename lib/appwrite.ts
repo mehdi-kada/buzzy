@@ -14,11 +14,7 @@ export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 export const VIDEOS_COLLECTION_ID = "videos";
 export const TRANSCRIPT_TABLE_ID = "transcripts";
 
-export const config = {
-  databaseId: DATABASE_ID,
-  videosCollectionId: VIDEOS_COLLECTION_ID,
-  storageBucketId: BUCKET_ID,
-};
+
 
 export { ID };
 
