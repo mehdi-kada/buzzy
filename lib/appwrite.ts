@@ -11,7 +11,8 @@ export const storage = new Storage(client);
 // IDs now sourced from environment variables instead of hardcoded values
 export const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID!;
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
-export const VIDEOS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_VIDEOS_COLLECTION_ID!;
+export const VIDEOS_COLLECTION_ID = "videos";
+export const TRANSCRIPT_TABLE_ID = "transcripts";
 
 export const config = {
   databaseId: DATABASE_ID,

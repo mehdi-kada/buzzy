@@ -4,8 +4,10 @@ import { useVideoUpload } from "@/hooks/useVideoUpload";
 import { storage } from "@/lib/appwrite";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const VideoUploader = () => {
+  const { user } = useAuth();
   const {
     selectedFile,
     uploadProgress,
@@ -36,12 +38,21 @@ useEffect(() => {
       // For a playable/streamable link use getFileView; for forced download use getFileDownload
       const url = storage.getFileView(bucketId, fileId);
       console.log("video url:", url);
+      
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+      
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ audioUrl: url }),
+        body: JSON.stringify({ 
+          audioUrl: url,
+          videoId: fileId,
+          userId: user.$id
+        }),
       });
       if (cancelled) return;
 
