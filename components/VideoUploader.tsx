@@ -65,8 +65,9 @@ useEffect(() => {
         throw new Error(`Transcription error: ${transcripts.error}`);
       }
       console.log("transcripts:", transcripts); 
-      // Optional redirect after a delay:
-      // setTimeout(() => router.replace(`/editing/${fileId}`), 800);
+      
+      // Redirect to editing page after successful transcription
+      setTimeout(() => router.push(`/editing/${fileId}`), 1000);
     } catch (err) {
       if (!cancelled) console.error("Failed to build video URL:", err);
     }
