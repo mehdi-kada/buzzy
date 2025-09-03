@@ -37,7 +37,7 @@ useEffect(() => {
     try {
       // For a playable/streamable link use getFileView; for forced download use getFileDownload
       const url = storage.getFileView(bucketId, fileId);
-      console.log("video url:", url);
+      console.log("video url:", url); 
       
       if (!user) {
         throw new Error("User not authenticated");
@@ -64,10 +64,18 @@ useEffect(() => {
       if (transcripts.error) {
         throw new Error(`Transcription error: ${transcripts.error}`);
       }
+
+      // Check if transcript was stored successfully
+      if (transcripts.storageWarning) {
+        console.warn("Storage warning:", transcripts.storageWarning);
+      }
+
+      if (!transcripts.transcriptId && !transcripts.storageWarning) {
+        throw new Error("Transcript was processed but not stored in database");
+      }
+
       console.log("transcripts:", transcripts); 
       
-      // Redirect to editing page after successful transcription
-      setTimeout(() => router.push(`/editing/${fileId}`), 1000);
     } catch (err) {
       if (!cancelled) console.error("Failed to build video URL:", err);
     }
