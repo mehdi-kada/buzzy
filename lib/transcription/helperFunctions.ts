@@ -1,5 +1,7 @@
 import { Client, Databases, ID } from 'node-appwrite';
 import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
+import { GoogleGenAI } from "@google/genai";
+import { transcriptAnalysisPrompts } from '../constants';
 
 // Helper to create a transcript request with AssemblyAI
 export async function createTranscript(audioUrl: string, apiKey: string) {
@@ -65,7 +67,7 @@ export async function pollTranscript(transcriptId: string, apiKey: string, maxPo
 }
 
 // Helper to prepare the database payload
-export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string) {
+export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string, clipsTimestamps?: string) {
     return {
         videoId,
         userId,
@@ -78,6 +80,7 @@ export function prepareTranscriptPayload(transcript: any, videoId: string, userI
         wordsCount: transcript.words?.length || 0,
         languageCode: transcript.language_code || 'unknown',
         sentimentAnalysis: JSON.stringify(transcript.sentiment_analysis_results || []),
+        clipsTimestamps: clipsTimestamps ?? "",
     };
 }
 
@@ -115,4 +118,20 @@ export function formatErrorResponse(error: any) {
             'Content-Type': 'application/json'
         }
     });
+}
+
+
+export async function geminiAnalysis(sentimentAnalysisResults: any[]): Promise<string> {
+    const apiKey = process.env.GEMINI_API_KEY!;
+    const ai = new GoogleGenAI({ apiKey });
+
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: transcriptAnalysisPrompts(JSON.stringify(sentimentAnalysisResults)),
+        config: {
+            responseMimeType: "application/json"
+        }
+    });
+
+    return response.text || "";
 }

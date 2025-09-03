@@ -5,7 +5,8 @@ import {
     pollTranscript,
     prepareTranscriptPayload,
     storeTranscriptInDatabase,
-    formatErrorResponse
+    formatErrorResponse,
+    geminiAnalysis
 } from '@/lib/transcription/helperFunctions';
 
 export async function POST(request: Request) {
@@ -25,10 +26,23 @@ export async function POST(request: Request) {
         // Poll for completion
         const transcript = await pollTranscript(transcriptData.id, apiKey);
 
+        // Analyze sentiment data with Gemini
+        let clipsTimestamps = "";
+        try {
+            if (transcript.sentiment_analysis_results && transcript.sentiment_analysis_results.length > 0) {
+                console.log("Analyzing sentiment data with Gemini...");
+                clipsTimestamps = await geminiAnalysis(transcript.sentiment_analysis_results);
+                console.log("Gemini analysis completed");
+            }
+        } catch (geminiError) {
+            console.error("Gemini analysis error:", geminiError);
+            // Continue with empty clipsTimestamps if Gemini fails
+        }
+
         // Store in database
         let storedTranscript: any | null = null;
         try {
-            const payload = prepareTranscriptPayload(transcript, videoId, userId);
+            const payload = prepareTranscriptPayload(transcript, videoId, userId, clipsTimestamps);
             storedTranscript = await storeTranscriptInDatabase(payload);
         } catch (dbError) {
             console.error("Database storage error:", dbError);
@@ -47,6 +61,7 @@ export async function POST(request: Request) {
             sentiment_analysis_results: transcript.sentiment_analysis_results,
             transcriptId: storedTranscript?.$id,
             wordsCount: transcript.words?.length || 0,
+            clipsTimestamps: clipsTimestamps,
             storageWarning: storedTranscript ? undefined : 'Transcript processed successfully but database storage failed'
         };
 
