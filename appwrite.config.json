@@ -1,0 +1,26 @@
+{
+    "projectId": "68b176e6002132376d96",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "functions": [
+        {
+            "$id": "68b85979001a3ce7abfd",
+            "name": "VideoProcessor",
+            "runtime": "node-22",
+            "specification": "s-1vcpu-1gb",
+            "execute": [
+                "any"
+            ],
+            "events": [],
+            "scopes": [
+                "users.read"
+            ],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/VideoProcessor"
+        }
+    ]
+}
