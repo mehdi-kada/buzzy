@@ -14,17 +14,6 @@
       ],
       "sourceMaps": true,
       "userDataDir": false
-    },
-    {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Debug with Firefox",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}",
-      "runtimeExecutable": "/usr/bin/firefox",
-      "runtimeArgs": [
-        "--start-debugger-server=9222"
-      ]
     }
   ]
 }

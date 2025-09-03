@@ -3,7 +3,7 @@
 import { useState, useRef, ChangeEvent } from "react";
 import { VideoUploadService } from "@/lib/videos/videoUploadService";
 import type { UploadVideoResult, UploadVideoMetadata } from "@/interfaces/videoUpload";
-import type { UploadProgress } from "appwrite";
+// Removed UploadProgress import since we normalize progress object in service
 
 interface FormStateMeta {
   title: string;
@@ -31,7 +31,7 @@ export const useVideoUpload = () => {
   const [validationIssues, setValidationIssues] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // No fallback interval; rely on Appwrite SDK progress events
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -63,9 +63,9 @@ export const useVideoUpload = () => {
   const handleUpload = async () => {
     if (!validateBeforeUpload() || !selectedFile) return;
     
-    setIsUploading(true);
-    setError("");
-    setUploadProgress(0);
+  setIsUploading(true);
+  setError("");
+  setUploadProgress(0);
 
     const meta: UploadVideoMetadata = {
       title: metadata.title.trim(),
@@ -76,47 +76,16 @@ export const useVideoUpload = () => {
         .filter(Boolean),
       category: metadata.category,
       isPublic: metadata.isPublic,
-      onProgress: (p: UploadProgress) => {
-
+      onProgress: (p: { loaded: number; total: number; progress: number }) => {
         if (p && typeof p === 'object') {
-          const progressData = p as any;
-          
-          if (typeof progressData.progress === 'number') {
-            const progress = Math.round(progressData.progress);
-            setUploadProgress(progress);
-          }
-          else if (typeof progressData.loaded === 'number' && typeof progressData.total === 'number' && progressData.total > 0) {
-            const progress = Math.min(100, Math.round((progressData.loaded / progressData.total) * 100));
-            setUploadProgress(progress);
-          }
-          else if (progressData.$id) {
-            setUploadProgress(100);
-          }
-          else {
-            setUploadProgress(prev => Math.min(99, prev + 1));
-          }
+          const progress = Math.round(p.progress || (p.loaded / p.total) * 100);
+          setUploadProgress(progress);
         }
       }
     };
 
     try {
-      // Start a progress simulation as fallback
-      progressIntervalRef.current = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev < 90) {
-            return prev + Math.random() * 10;
-          }
-          return prev;
-        });
-      }, 500);
-      
       const result = await VideoUploadService.uploadVideo(selectedFile, meta);
-      
-      // Clear the fallback progress
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
       setUploadProgress(100);
       
       if (result.success) {
@@ -128,11 +97,6 @@ export const useVideoUpload = () => {
     } catch (err: any) {
       setError(err?.message || "Upload failed");
     } finally {
-      // Ensure interval is cleared
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
       setIsUploading(false);
     }
   };
@@ -144,7 +108,7 @@ export const useVideoUpload = () => {
     setUploadProgress(0);
     setMetadata(DEFAULT_FORM);
     setValidationIssues([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return {

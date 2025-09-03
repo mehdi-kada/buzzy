@@ -1,4 +1,7 @@
-import { ID, Query, type Models, type UploadProgress, Permission, Role } from "appwrite";
+
+// videoUploadService.ts
+
+import { ID, Query, type Models, Permission, Role } from "appwrite";
 import { storage, BUCKET_ID, DATABASE_ID, databases, VIDEOS_COLLECTION_ID, account } from "../appwrite";
 import { getVideoDuration, validateVideoFile } from "./videoValidation";
 import { UploadVideoMetadata, UploadVideoResult } from "@/interfaces/videoUpload";
@@ -21,44 +24,30 @@ export class VideoUploadService {
 
       const videoId = ID.unique();
 
-      let uploadResult;
-      try {
-        uploadResult = await storage.createFile(
-          BUCKET_ID,
-          videoId,
-          file,
-          [
-            Permission.read(Role.any()),
-            Permission.write(Role.user(user.$id))
-          ],
-           metadata.onProgress
-        );
-      } catch (uploadError: any) {
-        // If permissions error, try without explicit permissions
-        if (uploadError.message.includes('unauthorized') || uploadError.message.includes('not authorized') || uploadError.message.includes('permissions')) {
-          uploadResult = await storage.createFile(
-            BUCKET_ID,
-            videoId,
-            file,
-            undefined,
-            metadata.onProgress
-          );
-        } else if (uploadError.message.includes('HTTP2') || uploadError.message.includes('Protocol')) {
-          // Wait and retry for protocol errors
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          uploadResult = await storage.createFile(
-            BUCKET_ID,
-            videoId,
-            file,
-            undefined,
-            metadata.onProgress
-          );
-        } else {
-          throw uploadError;
+      // By providing the onUploadProgress callback, you ensure the SDK uses chunked uploads,
+      // which is more stable and avoids the HTTP/2 protocol error.
+      const uploadResult = await storage.createFile(
+        BUCKET_ID,
+        videoId,
+        file,
+        [
+          Permission.read(Role.any()),
+          Permission.write(Role.user(user.$id)), // Set appropriate permissions
+        ],
+        (progress) => {
+          // You can pass the progress to your UI component if needed
+          if (metadata.onProgress) {
+            metadata.onProgress({
+              loaded: Math.round((progress.progress / 100) * file.size),
+              total: file.size,
+              progress: progress.progress
+            });
+          }
+          console.log(`Uploading... ${progress.progress}%`);
         }
-      }
+      );
 
-      // Step 6: Create video metadata document
+      // Create video metadata document
       const title = metadata.title || file.name;
       const tags = metadata.tags || [];
 
@@ -71,7 +60,7 @@ export class VideoUploadService {
           title,
           description: metadata.description || "",
           fileName: uploadResult.name,
-          mimeType: uploadResult.mimeType,
+          mimeType: file.type || 'video/mp4',
           sizeBytes: uploadResult.sizeOriginal,
           duration: duration,
           tags,
@@ -82,10 +71,13 @@ export class VideoUploadService {
 
       return {
         success: true,
+        // The uploadResult from createFile is already the file object you need.
+        // No need to create a new one manually.
         data: { file: uploadResult, record: videoRecord, videoId }
       };
     } catch (error) {
-      throw error instanceof Error ? error : new Error("Unknown error uploading video");
+      console.error("Error uploading video:", error);
+      throw error instanceof Error ? error : new Error("An unknown error occurred during video upload.");
     }
   }
 
@@ -99,7 +91,7 @@ export class VideoUploadService {
           Query.equal("userId", userId),
           Query.limit(limit),
           Query.offset(offset),
-      Query.orderDesc("uploadedAt"), // if field absent, consider $createdAt
+          Query.orderDesc("$createdAt"),
         ]
       );
       return results.documents;
@@ -139,7 +131,7 @@ export class VideoUploadService {
           Query.equal("userId", userId),
           Query.search("searchKeywords", query),
           Query.limit(limit),
-      Query.orderDesc("uploadedAt")
+          Query.orderDesc("$createdAt")
         ]
       );
       return results.documents;

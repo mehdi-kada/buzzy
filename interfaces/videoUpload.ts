@@ -7,7 +7,7 @@ export interface UploadVideoMetadata {
   category?: string;
   isPublic?: boolean;
   thumbnailId?: string | null;
-  onProgress?: (progress: UploadProgress) => void;
+  onProgress?: (progress: { loaded: number; total: number; progress: number }) => void;
 }
 
 export interface UploadVideoResult {
