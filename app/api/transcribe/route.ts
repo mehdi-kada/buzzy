@@ -6,7 +6,7 @@ import {
     prepareTranscriptPayload,
     storeTranscriptInDatabase,
     formatErrorResponse,
-    geminiAnalysis
+    openRouterAnalysis,
 } from '@/lib/transcription/helperFunctions';
 
 export async function POST(request: Request) {
@@ -26,17 +26,17 @@ export async function POST(request: Request) {
         // Poll for completion
         const transcript = await pollTranscript(transcriptData.id, apiKey);
 
-        // Analyze sentiment data with Gemini
+        // Analyze sentiment data with OpenRouter
         let clipsTimestamps = "";
         try {
             if (transcript.sentiment_analysis_results && transcript.sentiment_analysis_results.length > 0) {
-                console.log("Analyzing sentiment data with Gemini...");
-                clipsTimestamps = await geminiAnalysis(transcript.sentiment_analysis_results);
-                console.log("Gemini analysis completed");
+                console.log("Analyzing sentiment data with OpenRouter...");
+                clipsTimestamps = await openRouterAnalysis(transcript.sentiment_analysis_results);
+                console.log("OpenRouter analysis completed");
             }
-        } catch (geminiError) {
-            console.error("Gemini analysis error:", geminiError);
-            // Continue with empty clipsTimestamps if Gemini fails
+        } catch (openRouterError) {
+            console.error("OpenRouter analysis error:", openRouterError);
+            // Continue with empty clipsTimestamps if OpenRouter fails
         }
 
         // Store in database

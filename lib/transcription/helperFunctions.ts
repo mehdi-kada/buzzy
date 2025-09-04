@@ -1,9 +1,10 @@
 import { Client, Databases, ID } from 'node-appwrite';
 import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
-import { GoogleGenAI } from "@google/genai";
-import { transcriptAnalysisPrompts } from '../constants';
+import { openRouterAnalysisPrompt } from '../constants';
+import OpenAI from 'openai';
 
 // Helper to create a transcript request with AssemblyAI
+// TODO: Add type for trnascripts
 export async function createTranscript(audioUrl: string, apiKey: string) {
     const response = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
@@ -120,18 +121,75 @@ export function formatErrorResponse(error: any) {
     });
 }
 
+export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promise<string> {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    
+    if (!apiKey) {
+        throw new Error("OPENROUTER_API_KEY is not set in environment variables");
+    }
 
-export async function geminiAnalysis(sentimentAnalysisResults: any[]): Promise<string> {
-    const apiKey = process.env.GEMINI_API_KEY!;
-    const ai = new GoogleGenAI({ apiKey });
-
-    const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: transcriptAnalysisPrompts(JSON.stringify(sentimentAnalysisResults)),
-        config: {
-            responseMimeType: "application/json"
-        }
+    const openai = new OpenAI({
+        apiKey: apiKey,
+        baseURL: "https://openrouter.ai/api/v1",
     });
 
-    return response.text || "";
+    const response = await openai.chat.completions.create({
+        model: "deepseek/deepseek-chat-v3.1:free", // DeepSeek model
+        messages: [
+            {
+                role: "system",
+                content: openRouterAnalysisPrompt
+            },
+            {
+                role: "user",
+                content: `Analyze this sentiment analysis data and return viral clip timestamps: ${JSON.stringify(sentimentAnalysisResults)}`
+            }
+        ],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+    });
+
+    let content = response.choices[0]?.message?.content || "[]";
+    
+    // Remove markdown code blocks if they exist
+    if (content.startsWith("```json")) {
+        content = content.substring(7);
+    }
+    if (content.startsWith("```")) {
+        content = content.substring(3);
+    }
+    if (content.endsWith("```")) {
+        content = content.slice(0, -3);
+    }
+    
+    // Trim whitespace
+    content = content.trim();
+    
+    // Validate that it's valid JSON and extract clips array
+    try {
+        const parsed = JSON.parse(content);
+        
+        // If it's already an array, return it
+        if (Array.isArray(parsed)) {
+            return JSON.stringify(parsed);
+        }
+        
+        // If it's an object with clips array, extract it
+        if (parsed.clips && Array.isArray(parsed.clips)) {
+            return JSON.stringify(parsed.clips);
+        }
+        
+        // If it's an object but no clips array, try to find any array property
+        for (const key in parsed) {
+            if (Array.isArray(parsed[key])) {
+                return JSON.stringify(parsed[key]);
+            }
+        }
+        
+        console.error("No clips array found in response:", content);
+        return "[]";
+    } catch (e) {
+        console.error("Invalid JSON from OpenRouter:", content);
+        return "[]";
+    }
 }

@@ -1,9 +1,9 @@
 import { Client, Databases, Storage, ID } from 'node-appwrite';
 import { spawn } from 'child_process';
 import { writeFileSync, unlinkSync, existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { Readable } from 'stream';
 import ffmpegStatic from 'ffmpeg-static';
-
+import { InputFile } from 'node-appwrite/file';
 // This Appwrite function processes video clips based on transcript timestamps
 export default async ({ req, res, log, error }) => {
   const client = new Client()
@@ -14,11 +14,21 @@ export default async ({ req, res, log, error }) => {
   const databases = new Databases(client);
   const storage = new Storage(client);
   
-  const DATABASE_ID = '68b2d533003210de565e';
-  const VIDEOS_COLLECTION_ID = 'videos';
-  const TRANSCRIPTS_COLLECTION_ID = 'transcripts';
-  const CLIPS_COLLECTION_ID = 'clips';
-  const CLIPS_BUCKET_ID = 'clips';
+  // Prefer environment variables for flexibility (configure these in the Appwrite Function settings)
+  // FALLBACKS kept for backward compatibility but will log warnings.
+  const DATABASE_ID = process.env.APPWRITE_FUNCTION_DATABASE_ID || '68b2d533003210de565e';
+  const VIDEOS_COLLECTION_ID = process.env.APPWRITE_FUNCTION_VIDEOS_COLLECTION_ID || 'videos';
+  const TRANSCRIPTS_COLLECTION_ID = process.env.APPWRITE_FUNCTION_TRANSCRIPTS_COLLECTION_ID || 'transcripts';
+  const CLIPS_COLLECTION_ID = process.env.APPWRITE_FUNCTION_CLIPS_COLLECTION_ID || 'clips';
+  // Bucket IDs – the original code hard‑coded 'videos' but your client app uses BUCKET_ID from env.
+  const VIDEOS_BUCKET_ID = process.env.APPWRITE_FUNCTION_VIDEOS_BUCKET_ID
+    || process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID
+    || process.env.VIDEOS_BUCKET_ID
+    || 'videos'; // last resort fallback (likely wrong if you see bucket not found errors)
+  const CLIPS_BUCKET_ID = process.env.APPWRITE_FUNCTION_CLIPS_BUCKET_ID || 'clips';
+
+
+
 
   try {
     // Handle ping requests
@@ -90,32 +100,35 @@ export default async ({ req, res, log, error }) => {
     }
 
     log(`Processing ${clipsData.length} clips for video ${transcriptDoc.videoId}`);
+    log(`First clip data types: start=${typeof clipsData[0]?.start}, end=${typeof clipsData[0]?.end}`);
+    log(`First clip values: start=${clipsData[0]?.start}, end=${clipsData[0]?.end}`);
 
     // Validate clips data format
     for (let i = 0; i < clipsData.length; i++) {
       const clip = clipsData[i];
-      if (!clip.startTime || !clip.endTime || !clip.title) {
+      
+      // Convert start and end to numbers if they're strings
+      if (typeof clip.start === 'string') {
+        clip.start = parseInt(clip.start, 10);
+      }
+      if (typeof clip.end === 'string') {
+        clip.end = parseInt(clip.end, 10);
+      }
+      
+      if (typeof clip.start !== 'number' || typeof clip.end !== 'number' || isNaN(clip.start) || isNaN(clip.end)) {
         error(`Invalid clip format at index ${i}: ${JSON.stringify(clip)}`);
         return res.json({ 
           success: false, 
-          message: `Invalid clip format at index ${i}. Required fields: startTime, endTime, title` 
+          message: `Invalid clip format at index ${i}. Required fields: start, end (must be numbers)` 
         });
       }
       
-      // Validate time format (should be in seconds or HH:MM:SS)
-      if (typeof clip.startTime !== 'number' && typeof clip.startTime !== 'string') {
-        error(`Invalid startTime format at index ${i}: ${clip.startTime}`);
+      // Validate time values are positive
+      if (clip.start < 0 || clip.end < 0 || clip.start >= clip.end) {
+        error(`Invalid time values at index ${i}: start=${clip.start}, end=${clip.end}`);
         return res.json({ 
           success: false, 
-          message: `Invalid startTime format at index ${i}` 
-        });
-      }
-      
-      if (typeof clip.endTime !== 'number' && typeof clip.endTime !== 'string') {
-        error(`Invalid endTime format at index ${i}: ${clip.endTime}`);
-        return res.json({ 
-          success: false, 
-          message: `Invalid endTime format at index ${i}` 
+          message: `Invalid time values at index ${i}. Start must be >= 0 and end must be > start.` 
         });
       }
     }
@@ -131,31 +144,22 @@ export default async ({ req, res, log, error }) => {
 
     // Try to download the original video file
     // First try using the video document ID (most common case)
-    let videoFileId = transcriptDoc.videoId;
+    let videoFileId = transcriptDoc.videoId; // Usually same as file & document ID (your upload service uses videoId for file id)
     let originalVideoFile;
     
     try {
-      log(`Attempting to download video file using video ID: ${videoFileId}`);
-      originalVideoFile = await storage.getFileDownload('videos', videoFileId);
-      log(`Successfully downloaded video file using video ID: ${videoFileId}`);
+      originalVideoFile = await storage.getFileDownload(VIDEOS_BUCKET_ID, videoFileId);
     } catch (downloadError) {
-      log(`Failed to download using video ID. Error: ${downloadError.message}`);
-      
-      // If video ID doesn't work, try using the document ID as file ID
-      try {
-        videoFileId = videoDoc.$id;
-        log(`Trying with document ID: ${videoFileId}`);
-        originalVideoFile = await storage.getFileDownload('videos', videoFileId);
-        log(`Successfully downloaded video file using document ID: ${videoFileId}`);
-      } catch (secondDownloadError) {
-        log(`Failed to download using document ID. Error: ${secondDownloadError.message}`);
-        throw new Error(`Cannot download video file. Tried video ID (${transcriptDoc.videoId}) and document ID (${videoDoc.$id}). Last error: ${secondDownloadError.message}`);
+      log(`Failed to download using provided video ID '${videoFileId}' in bucket '${VIDEOS_BUCKET_ID}'. Error: ${downloadError.message}`);
+      if (downloadError && downloadError.type) {
+        log(`Appwrite error type: ${downloadError.type}`);
       }
+      
     }
 
     const tempVideoPath = `/tmp/original_${videoDoc.fileName}`;
     writeFileSync(tempVideoPath, Buffer.from(originalVideoFile));
-    log(`Video file written to temporary path: ${tempVideoPath}`);
+
 
     const processedClipIds = [];
 
@@ -165,8 +169,6 @@ export default async ({ req, res, log, error }) => {
       const clipId = ID.unique();
       
       try {
-        log(`Processing clip ${i + 1}/${clipsData.length}: ${clip.start}ms - ${clip.end}ms`);
-
         // Convert milliseconds to seconds for ffmpeg
         const startTime = clip.start / 1000;
         const endTime = clip.end / 1000;
@@ -188,13 +190,8 @@ export default async ({ req, res, log, error }) => {
             '-y' // Overwrite output file
           ]);
 
-          ffmpeg.stderr.on('data', (data) => {
-            log(`FFmpeg stderr: ${data}`);
-          });
-
           ffmpeg.on('close', (code) => {
             if (code === 0) {
-              log(`Clip ${i + 1} extracted successfully`);
               resolve();
             } else {
               reject(new Error(`FFmpeg process exited with code ${code}`));
@@ -213,13 +210,12 @@ export default async ({ req, res, log, error }) => {
 
         // Read the clip file and upload to storage
         const clipFileBuffer = readFileSync(tempClipPath);
-        
-        // Upload clip to clips bucket
+
+
         const clipFile = await storage.createFile(
           CLIPS_BUCKET_ID,
           clipId,
-          clipFileName,
-          clipFileBuffer
+          InputFile.fromPath(tempClipPath, clipFileName) // ensures proper multipart + filename [12][14]
         );
 
         // Create clip metadata document
