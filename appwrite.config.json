@@ -10,12 +10,19 @@
             "execute": [
                 "any"
             ],
-            "events": [],
+            "events": [
+                "databases.*.collections.transcripts.documents.*.create",
+                "databases.*.collections.transcripts.documents.*.update"
+            ],
             "scopes": [
-                "users.read"
+                "users.read",
+                "databases.read",
+                "databases.write",
+                "files.read",
+                "files.write"
             ],
             "schedule": "",
-            "timeout": 15,
+            "timeout": 900,
             "enabled": true,
             "logging": true,
             "entrypoint": "src/main.js",

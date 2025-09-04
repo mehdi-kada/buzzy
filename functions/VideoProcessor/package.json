@@ -1,7 +1,7 @@
 {
-  "name": "starter-template",
+  "name": "video-processor",
   "version": "1.0.0",
-  "description": "",
+  "description": "Appwrite function for processing video clips using FFmpeg",
   "main": "src/main.js",
   "type": "module",
   "scripts": {
