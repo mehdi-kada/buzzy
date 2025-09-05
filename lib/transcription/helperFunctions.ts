@@ -14,7 +14,7 @@ export async function createTranscript(audioUrl: string, apiKey: string) {
         },
         body: JSON.stringify({
             audio_url: audioUrl,
-            auto_highlights: true,
+            auto_highlights: true,  
             language_detection: true,
             sentiment_analysis: true,
             speaker_labels: true,
@@ -32,34 +32,27 @@ export async function createTranscript(audioUrl: string, apiKey: string) {
 export async function pollTranscript(transcriptId: string, apiKey: string, maxPolls: number = 60) {
     let transcript: any;
     let pollCount = 0;
-
     while (pollCount < maxPolls) {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-
         const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
             },
         });
-
         if (!response.ok) {
             throw new Error(`Failed to poll transcript: ${response.status} ${response.statusText}`);
         }
-
         transcript = await response.json();
         console.log("Transcript status:", transcript.status);
 
         if (transcript.status === 'completed' || transcript.status === 'error') {
             break;
         }
-
         pollCount++;
     }
-
     if (pollCount >= maxPolls) {
         throw new Error("Transcription timeout - please try again");
     }
-
     if (transcript.status === 'error') {
         throw new Error(`Transcription failed: ${transcript.error}`);
     }
@@ -134,7 +127,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "deepseek/deepseek-chat-v3.1:free", // DeepSeek model
+        model: "google/gemini-2.5-flash-lite-preview-06-17", // Google Gemini model
         messages: [
             {
                 role: "system",
