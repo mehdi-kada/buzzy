@@ -1,12 +1,12 @@
 import { Client, Databases, ID } from 'node-appwrite';
 import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
 import {
-    createTranscript,
     pollTranscript,
     prepareTranscriptPayload,
     storeTranscriptInDatabase,
     formatErrorResponse,
     openRouterAnalysis,
+    createTranscript,
 } from '@/lib/transcription/helperFunctions';
 
 export async function POST(request: Request) {
@@ -21,17 +21,17 @@ export async function POST(request: Request) {
         const apiKey = process.env.ASSEMBLYAI_API_KEY!;
 
         // Create transcript
-        const transcriptData = await createTranscript(audioUrl, apiKey);
+        const {transcriptData, srtUrl} = await createTranscript(audioUrl, apiKey);
 
         // Poll for completion
-        const transcript = await pollTranscript(transcriptData.id, apiKey);
+        //const transcript = await pollTranscript(transcriptData.id, apiKey);
 
         // Analyze sentiment data with OpenRouter
         let clipsTimestamps = "";
         try {
-            if (transcript.sentiment_analysis_results && transcript.sentiment_analysis_results.length > 0) {
+            if (transcriptData.sentiment_analysis_results && transcriptData.sentiment_analysis_results.length > 0) {
                 console.log("Analyzing sentiment data with OpenRouter...");
-                clipsTimestamps = await openRouterAnalysis(transcript.sentiment_analysis_results);
+                clipsTimestamps = await openRouterAnalysis(transcriptData.sentiment_analysis_results);
                 console.log("OpenRouter analysis completed");
             }
         } catch (openRouterError) {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         // Store in database
         let storedTranscript: any | null = null;
         try {
-            const payload = prepareTranscriptPayload(transcript, videoId, userId, clipsTimestamps);
+            const payload = prepareTranscriptPayload(transcriptData, videoId, userId, clipsTimestamps, srtUrl);
             storedTranscript = await storeTranscriptInDatabase(payload);
         } catch (dbError) {
             console.error("Database storage error:", dbError);
@@ -51,16 +51,15 @@ export async function POST(request: Request) {
         
 
         const result = {
-            id: transcript.id,
-            status: transcript.status,
-            text: transcript.text,
-            confidence: transcript.confidence,
-            audio_duration: transcript.audio_duration,
-            words: transcript.words,
-            language_code: transcript.language_code,
-            sentiment_analysis_results: transcript.sentiment_analysis_results,
+            id: transcriptData.id,
+            status: transcriptData.status,
+            text: transcriptData.text,
+            confidence: transcriptData.confidence,
+            audio_duration: transcriptData.audio_duration,
+            words: transcriptData.words,
+            language_code: transcriptData.language_code,
             transcriptId: storedTranscript?.$id,
-            wordsCount: transcript.words?.length || 0,
+            wordsCount: transcriptData.words?.length || 0,
             clipsTimestamps: clipsTimestamps,
             storageWarning: storedTranscript ? undefined : 'Transcript processed successfully but database storage failed'
         };

@@ -1,11 +1,13 @@
 import { Client, Databases, ID } from 'node-appwrite';
-import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
+import { InputFile } from 'node-appwrite/file';
+import { DATABASE_ID, storage, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
 import { openRouterAnalysisPrompt } from '../constants';
 import OpenAI from 'openai';
+import { AssemblyAI } from 'assemblyai';
 
 // Helper to create a transcript request with AssemblyAI
 // TODO: Add type for trnascripts
-export async function createTranscript(audioUrl: string, apiKey: string) {
+export async function createTranscriptAPI(audioUrl: string, apiKey: string) {
     const response = await fetch('https://api.assemblyai.com/v2/transcript', {
         method: 'POST',
         headers: {
@@ -26,6 +28,35 @@ export async function createTranscript(audioUrl: string, apiKey: string) {
     }
 
     return await response.json();
+}
+
+export async function createTranscript(audio_url:string, apiKey:string) {
+    const client = new AssemblyAI({ apiKey: apiKey });
+    
+    try {
+        const transcriptData = await client.transcripts.transcribe({
+            audio_url: audio_url,
+            sentiment_analysis: true,
+            language_detection: true,
+            speaker_labels: true,
+        });
+        console.log("Created transcript with ID:", transcriptData.id);
+        console.log("the highlights of the video are : ", transcriptData.auto_highlights_result);
+        const srtString = await client.transcripts.subtitles(transcriptData.id, "srt", 32);
+        const strFile = Buffer.from(srtString);
+        const result = await storage.createFile(
+            process.env.NEXT_PUBLIC_APPWRITE_TRANSCRIPT_BUCKET_ID!,
+            ID.unique(),
+            new File([strFile], `subtitles_${transcriptData.id}.srt`, { type: 'application/x-subrip' })
+        );
+        return { transcriptData, srtUrl: result.$id };
+    } catch (error) {
+        console.error("Error creating transcript or fetching subtitles:", error);
+        throw error;
+    }
+
+
+     
 }
 
 // Helper to poll for transcript completion with timeout
@@ -61,7 +92,7 @@ export async function pollTranscript(transcriptId: string, apiKey: string, maxPo
 }
 
 // Helper to prepare the database payload
-export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string, clipsTimestamps?: string) {
+export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string, clipsTimestamps?: string, srtUrl?: string) {
     return {
         videoId,
         userId,
@@ -73,8 +104,8 @@ export function prepareTranscriptPayload(transcript: any, videoId: string, userI
         words: JSON.stringify(transcript.words || []),
         wordsCount: transcript.words?.length || 0,
         languageCode: transcript.language_code || 'unknown',
-        sentimentAnalysis: JSON.stringify(transcript.sentiment_analysis_results || []),
         clipsTimestamps: clipsTimestamps ?? "",
+        transcriptsFileId: srtUrl || "",
     };
 }
 
@@ -127,7 +158,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "google/gemini-2.5-flash-lite-preview-06-17", // Google Gemini model
+        model: "openrouter/sonoma-dusk-alpha", // Qwen model
         messages: [
             {
                 role: "system",

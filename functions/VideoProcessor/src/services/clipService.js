@@ -1,10 +1,10 @@
 import { ID } from 'node-appwrite';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { InputFile } from 'node-appwrite/file';
-import { extractClip, extractClipWithSubtitles } from '../utils/ffmpeg.js';
-import { filterTranscriptForClip, generateSubtitleFile, generateSubtitleFileWithSentiment } from '../utils/transcript.js';
+import { extractClip} from '../utils/ffmpeg.js';
 
-export async function processClips(clipsData, transcriptDoc, videoDoc, tempVideoPath, clients, loggers) {
+
+export async function processClips(clipsData, transcriptDoc, tempVideoPath, clients, loggers) {
   const { databases, storage, config } = clients;
   const { log, error } = loggers;
   const processedClipIds = [];
@@ -46,56 +46,9 @@ export async function processClips(clipsData, transcriptDoc, videoDoc, tempVideo
       tempClipPath = `/tmp/${clipFileName}`;
       tempFilesToCleanup.push(tempClipPath);
 
-      // Process subtitles if transcript is available
-      if (fullTranscript) {
-        log(`Processing subtitles for clip ${i + 1}`);
-        // Parse the full transcript first
-        const parsedTranscript = JSON.parse(fullTranscript);
-        log(`Parsed transcript with ${parsedTranscript.length} sentences`);
-        
-        // Filter transcript for this clip
-        const clipSentences = filterTranscriptForClip(parsedTranscript, clip.start, clip.end);
-        log(`Found ${clipSentences.length} sentences for this clip`);
-        
-        if (clipSentences.length > 0) {
-          // Generate subtitle file
-          subtitlePath = `/tmp/subtitle_${clipId}.srt`;
-          tempFilesToCleanup.push(subtitlePath);
-          log(`Generating subtitle file at ${subtitlePath}`);
-          
-          // Choose between regular subtitles or sentiment-enhanced
-          const useSentimentStyling = false; // Set to true if you want sentiment features
-          
-          if (useSentimentStyling) {
-            generateSubtitleFileWithSentiment(clipSentences, subtitlePath);
-          } else {
-            generateSubtitleFile(clipSentences, subtitlePath);
-          }
-          
-          // Verify subtitle file exists and is readable
-          if (!existsSync(subtitlePath)) {
-            throw new Error(`Subtitle file was not created: ${subtitlePath}`);
-          }
-          
-          // Log the subtitle content for debugging (first 500 chars)
-          const subtitleContent = readFileSync(subtitlePath, 'utf8');
-          log(`Subtitle content preview: ${subtitleContent.substring(0, 500)}...`);
-  
-          // Extract clip with burned-in subtitles
-          log(`Extracting clip with subtitles: ${startTime}s to ${endTime}s`);
-          await extractClipWithSubtitles(tempVideoPath, startTime, duration, subtitlePath, tempClipPath, useSentimentStyling);
-          
-          log(`Clip ${i + 1} processed with ${clipSentences.length} subtitle sentences`);
-        } else {
-          // No sentences in this clip, extract without subtitles
-          await extractClip(tempVideoPath, startTime, duration, tempClipPath);
-          log(`Clip ${i + 1} processed without subtitles (no sentences found)`);
-        }
-      } else {
         // No transcript available, extract without subtitles
         await extractClip(tempVideoPath, startTime, duration, tempClipPath);
         log(`Clip ${i + 1} processed without subtitles (no transcript)`);
-      }
 
       // Check if clip file was created successfully
       if (!existsSync(tempClipPath)) {
@@ -182,13 +135,4 @@ export async function processClips(clipsData, transcriptDoc, videoDoc, tempVideo
   });
 
   return processedClipIds;
-}
-
-export async function updateVideoWithClips(databases, config, videoId, clipIds) {
-  return await databases.updateDocument(
-    config.DATABASE_ID,
-    config.VIDEOS_COLLECTION_ID,
-    videoId,
-    { clipIds }
-  );
 }

@@ -1,10 +1,10 @@
 import { writeFileSync, unlinkSync, existsSync } from 'fs';
 
-export async function downloadVideoFile(storage, config, videoId, videoDoc) {
+export async function downloadVideoFile(storage, config, videoId) {
   try {
     const originalVideoFile = await storage.getFileDownload(config.VIDEOS_BUCKET_ID, videoId);
-    const tempVideoPath = `/tmp/original_${videoDoc.fileName}`;
-    
+    const tempVideoPath = `/tmp/original_${videoId}.mp4`;
+
     // Handle ArrayBuffer (which is what Appwrite returns)
     if (originalVideoFile instanceof ArrayBuffer) {
       writeFileSync(tempVideoPath, Buffer.from(originalVideoFile));

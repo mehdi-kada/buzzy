@@ -1,8 +1,6 @@
 import { initializeAppwrite } from './appwrite.js';
-import { processPayload, getVideoDocument } from './utils/payload.js';
-import { validateClipsData } from './utils/validation.js';
 import { downloadVideoFile, cleanupTempFiles } from './utils/fileHandler.js';
-import { processClips, updateVideoWithClips } from './services/clipService.js';
+import { processClips} from './services/clipService.js';
 
 export default async ({ req, res, log, error }) => {
   try {
@@ -14,24 +12,30 @@ export default async ({ req, res, log, error }) => {
     const { databases, storage, config } = await initializeAppwrite(req);
     
     // Process and validate payload
-    const transcriptDoc = await processPayload(req, log, error, res);
-    if (!transcriptDoc) return; // Response already sent
+      const transcriptDoc = req.body || req;
+      if (!transcriptDoc) return;
+
+  // Check if clipsTimestamps exists and is not empty
+      if (!transcriptDoc.clipsTimestamps || transcriptDoc.clipsTimestamps.trim() === '') {
+        log('No clips timestamps found in transcript document');
+        log(`Document structure: ${JSON.stringify(transcriptDoc, null, 2)}`);
+        res.json({ success: false, message: 'No clips timestamps to process' });
+        return null;
+      }
+
     
     // Validate clips data
-    const clipsData = await validateClipsData(transcriptDoc, log, error, res);
-    if (!clipsData) return; // Response already sent
-    
+    const clipsData = JSON.parse(transcriptDoc.clipsTimestamps);
+
     log(`Processing ${clipsData.length} clips for video ${transcriptDoc.videoId}`);
     
-    // Get video document and download file
-    const videoDoc = await getVideoDocument(databases, config, transcriptDoc.videoId);
-    const tempVideoPath = await downloadVideoFile(storage, config, transcriptDoc.videoId, videoDoc);
+
+    const tempVideoPath = await downloadVideoFile(storage, config, transcriptDoc.videoId);
     
     // Process all clips
     const processedClipIds = await processClips(
       clipsData, 
       transcriptDoc, 
-      videoDoc, 
       tempVideoPath, 
       { databases, storage, config },
       { log, error }
@@ -39,7 +43,12 @@ export default async ({ req, res, log, error }) => {
     
     // Update video document with clip IDs
     if (processedClipIds.length > 0) {
-      await updateVideoWithClips(databases, config, transcriptDoc.videoId, processedClipIds);
+        await databases.updateDocument(
+          config.DATABASE_ID,
+          config.VIDEOS_COLLECTION_ID,
+          transcriptDoc.videoId,
+          { clipIds: processedClipIds }
+      );
     }
     
     // Cleanup
