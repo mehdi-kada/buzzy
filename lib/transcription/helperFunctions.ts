@@ -5,31 +5,6 @@ import { openRouterAnalysisPrompt } from '../constants';
 import OpenAI from 'openai';
 import { AssemblyAI } from 'assemblyai';
 
-// Helper to create a transcript request with AssemblyAI
-// TODO: Add type for trnascripts
-export async function createTranscriptAPI(audioUrl: string, apiKey: string) {
-    const response = await fetch('https://api.assemblyai.com/v2/transcript', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            audio_url: audioUrl,
-            auto_highlights: true,  
-            language_detection: true,
-            sentiment_analysis: true,
-            speaker_labels: true,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Failed to create transcript: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-}
-
 export async function createTranscript(audio_url:string, apiKey:string) {
     const client = new AssemblyAI({ apiKey: apiKey });
     
@@ -105,7 +80,7 @@ export function prepareTranscriptPayload(transcript: any, videoId: string, userI
         wordsCount: transcript.words?.length || 0,
         languageCode: transcript.language_code || 'unknown',
         clipsTimestamps: clipsTimestamps ?? "",
-        transcriptsFileId: srtUrl || "",
+        transcriptFileId: srtUrl || "",
     };
 }
 
@@ -158,7 +133,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "openrouter/sonoma-dusk-alpha", // Qwen model
+        model: "openrouter/sonoma-sky-alpha", //grok model 
         messages: [
             {
                 role: "system",
@@ -167,10 +142,11 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
             {
                 role: "user",
                 content: `Analyze this sentiment analysis data and return viral clip timestamps: ${JSON.stringify(sentimentAnalysisResults)}`
-            }
+            },
         ],
         temperature: 0.7,
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        reasoning: {effort: "high" }
     });
 
     let content = response.choices[0]?.message?.content || "[]";

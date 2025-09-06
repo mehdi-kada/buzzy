@@ -27,9 +27,6 @@ export default async ({ req, res, log, error }) => {
     // Validate clips data
     const clipsData = JSON.parse(transcriptDoc.clipsTimestamps);
 
-    log(`Processing ${clipsData.length} clips for video ${transcriptDoc.videoId}`);
-    
-
     const tempVideoPath = await downloadVideoFile(storage, config, transcriptDoc.videoId);
     
     // Process all clips
