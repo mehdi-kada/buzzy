@@ -66,6 +66,9 @@ export class VideoUploadService {
           tags,
           category: metadata.category || "uncategorized",
           thumbnailId: metadata.thumbnailId || null,
+          status: "uploaded", // Set initial status
+          progress: 0, // Set initial progress
+          clipIds: [], // Initialize empty clip array
         }
       );
 

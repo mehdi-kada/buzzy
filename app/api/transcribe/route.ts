@@ -1,7 +1,6 @@
 import { Client, Databases, ID } from 'node-appwrite';
-import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
+import { DATABASE_ID, TRANSCRIPT_TABLE_ID, VIDEOS_COLLECTION_ID } from '@/lib/appwrite';
 import {
-    pollTranscript,
     prepareTranscriptPayload,
     storeTranscriptInDatabase,
     formatErrorResponse,
@@ -23,8 +22,6 @@ export async function POST(request: Request) {
         // Create transcript
         const {transcriptData, srtUrl} = await createTranscript(audioUrl, apiKey);
 
-        // Poll for completion
-        //const transcript = await pollTranscript(transcriptData.id, apiKey);
 
         // Analyze sentiment data with OpenRouter
         let clipsTimestamps = "";
@@ -39,16 +36,34 @@ export async function POST(request: Request) {
             // Continue with empty clipsTimestamps if OpenRouter fails
         }
 
-        // Store in database
+        // Store in transcripts table
         let storedTranscript: any | null = null;
         try {
             const payload = prepareTranscriptPayload(transcriptData, videoId, userId, clipsTimestamps, srtUrl);
             storedTranscript = await storeTranscriptInDatabase(payload);
+            
+            // Update video status to processing after transcript is created
+            const client = new Client()
+                .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+                .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
+                .setKey(process.env.APPWRITE_API_KEY!);
+            
+            const databases = new Databases(client);
+            
+            await databases.updateDocument(
+                DATABASE_ID,
+                VIDEOS_COLLECTION_ID,
+                videoId,
+                {
+                    status: 'processing',
+                    progress: 25,
+                }
+            );
         } catch (dbError) {
             console.error("Database storage error:", dbError);
         }
 
-        
+        // create the project
 
         const result = {
             id: transcriptData.id,

@@ -1,4 +1,4 @@
-import { Client, Databases, ID } from 'node-appwrite';
+import { Client, Databases, ID, Query } from 'node-appwrite';
 import { InputFile } from 'node-appwrite/file';
 import { DATABASE_ID, storage, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
 import { openRouterAnalysisPrompt } from '../constants';
@@ -35,36 +35,7 @@ export async function createTranscript(audio_url:string, apiKey:string) {
 }
 
 // Helper to poll for transcript completion with timeout
-export async function pollTranscript(transcriptId: string, apiKey: string, maxPolls: number = 60) {
-    let transcript: any;
-    let pollCount = 0;
-    while (pollCount < maxPolls) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-        const response = await fetch(`https://api.assemblyai.com/v2/transcript/${transcriptId}`, {
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to poll transcript: ${response.status} ${response.statusText}`);
-        }
-        transcript = await response.json();
-        console.log("Transcript status:", transcript.status);
 
-        if (transcript.status === 'completed' || transcript.status === 'error') {
-            break;
-        }
-        pollCount++;
-    }
-    if (pollCount >= maxPolls) {
-        throw new Error("Transcription timeout - please try again");
-    }
-    if (transcript.status === 'error') {
-        throw new Error(`Transcription failed: ${transcript.error}`);
-    }
-
-    return transcript;
-}
 
 // Helper to prepare the database payload
 export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string, clipsTimestamps?: string, srtUrl?: string) {
@@ -101,6 +72,25 @@ export async function storeTranscriptInDatabase(payload: any) {
 
     console.log("Stored transcript with ID:", storedTranscript.$id);
     return storedTranscript;
+}
+
+export async function getUserProjects(userId: string) {
+    const client = new Client()
+        .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+        .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
+        .setKey(process.env.APPWRITE_API_KEY!); // server key
+
+    const databases = new Databases(client);
+    const projects = await databases.listDocuments(
+        DATABASE_ID,
+        "videos",
+        [
+            Query.equal("userId", userId)
+        ]
+
+    );
+
+    return projects.documents;
 }
 
 // Helper to format error responses

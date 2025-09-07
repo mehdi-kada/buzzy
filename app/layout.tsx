@@ -4,8 +4,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Appwrite Auth App',
-  description: 'Next.js app with Appwrite authentication',
+  title: 'Buzzler',
+  description: 'AI-powered video clip extraction',
 };
 
 export default function RootLayout({

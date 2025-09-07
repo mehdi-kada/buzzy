@@ -1,5 +1,5 @@
 import { Client, Databases } from 'node-appwrite';
-import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
+import { DATABASE_ID, TRANSCRIPT_TABLE_ID, VIDEOS_COLLECTION_ID } from '@/lib/appwrite';
 
 export async function PATCH(request: Request) {
     try {
@@ -49,6 +49,57 @@ export async function PATCH(request: Request) {
             headers: {
                 'Content-Type': 'application/json'
             }
+        });
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const { videoId, status, progress, clipIds } = await request.json();
+        
+        if (!videoId) {
+            return new Response(JSON.stringify({ error: 'Missing videoId parameter' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        
+        // Initialize Appwrite client
+        const client = new Client()
+            .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+            .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
+            .setKey(process.env.APPWRITE_API_KEY!);
+
+        const databases = new Databases(client);
+        
+        // Prepare update data
+        const updateData: any = {};
+        if (status !== undefined) updateData.status = status;
+        if (progress !== undefined) updateData.progress = progress;
+        if (clipIds !== undefined) updateData.clipIds = clipIds;
+        
+        // Update the video document
+        const updatedProject = await databases.updateDocument(
+            DATABASE_ID,
+            VIDEOS_COLLECTION_ID,
+            videoId,
+            updateData
+        );
+        
+        return new Response(JSON.stringify({ 
+            success: true, 
+            project: updatedProject 
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (error: any) {
+        console.error('Error updating video status:', error);
+        return new Response(JSON.stringify({ 
+            error: error.message || 'Failed to update video status' 
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 }
