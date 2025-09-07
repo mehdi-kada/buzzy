@@ -51,7 +51,9 @@ export function prepareTranscriptPayload(transcript: any, videoId: string, userI
         wordsCount: transcript.words?.length || 0,
         languageCode: transcript.language_code || 'unknown',
         clipsTimestamps: clipsTimestamps ?? "",
-        transcriptFileId: srtUrl || "",
+    transcriptFileId: srtUrl || "",
+    // set relationship so videos.transcript is linked automatically (two-way)
+    video: videoId,
     };
 }
 
@@ -123,7 +125,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "openrouter/sonoma-sky-alpha", //grok model 
+        model: "openai/gpt-oss-20b:free", //grok model
         messages: [
             {
                 role: "system",
@@ -135,8 +137,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
             },
         ],
         temperature: 0.7,
-        response_format: { type: "json_object" },
-        reasoning: {effort: "high" }
+    response_format: { type: "json_object" }
     });
 
     let content = response.choices[0]?.message?.content || "[]";

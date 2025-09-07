@@ -55,7 +55,7 @@ export async function PATCH(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const { videoId, status, progress, clipIds } = await request.json();
+        const { videoId, status,clipIds } = await request.json();
         
         if (!videoId) {
             return new Response(JSON.stringify({ error: 'Missing videoId parameter' }), {
@@ -75,7 +75,6 @@ export async function POST(request: Request) {
         // Prepare update data
         const updateData: any = {};
         if (status !== undefined) updateData.status = status;
-        if (progress !== undefined) updateData.progress = progress;
         if (clipIds !== undefined) updateData.clipIds = clipIds;
         
         // Update the video document

@@ -5,7 +5,6 @@ export interface Project extends Models.Document {
   title: string;
   description: string;
   status: 'uploaded' | 'processing' | 'completed' | 'failed';
-  progress: number;
   clipIds?: string[];
   thumbnailId?: string;
 }

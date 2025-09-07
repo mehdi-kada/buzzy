@@ -47,7 +47,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       ...project,
       // Use actual database status field, with fallback logic
       status: project.status || (project.clipIds && project.clipIds.length > 0 ? 'completed' : 'processing'),
-      progress: project.progress !== null && project.progress !== undefined ? project.progress : (project.clipIds && project.clipIds.length > 0 ? 100 : 75),
     };
     
     return new Response(JSON.stringify(projectWithStatus), {

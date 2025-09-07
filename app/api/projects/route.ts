@@ -29,7 +29,6 @@ export async function GET(request: Request) {
       VIDEOS_COLLECTION_ID,
       [
         Query.equal('userId', userId),
-        Query.orderDesc('$createdAt')
       ]
     );
     
@@ -38,7 +37,6 @@ export async function GET(request: Request) {
       ...doc,
       // Use actual database status field, with fallback logic
       status: doc.status || (doc.clipIds && doc.clipIds.length > 0 ? 'completed' : 'processing'),
-      progress: doc.progress !== null && doc.progress !== undefined ? doc.progress : (doc.clipIds && doc.clipIds.length > 0 ? 100 : 75),
     }));
     
     return new Response(JSON.stringify(projectsWithStatus), {

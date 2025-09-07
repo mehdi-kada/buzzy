@@ -56,7 +56,6 @@ export async function POST(request: Request) {
                 videoId,
                 {
                     status: 'processing',
-                    progress: 25,
                 }
             );
         } catch (dbError) {
