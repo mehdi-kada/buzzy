@@ -32,6 +32,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       projectId
     );
     
+    console.log("Fetched project:", project);
     // Verify that the project belongs to the requesting user
     if (project.userId !== userId) {
       return new Response(JSON.stringify({ error: 'Project not found or access denied' }), {
@@ -48,6 +49,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       // Use actual database status field, with fallback logic
       status: project.status || (project.clipIds && project.clipIds.length > 0 ? 'completed' : 'processing'),
     };
+    
+    
     
     return new Response(JSON.stringify(projectWithStatus), {
       status: 200,

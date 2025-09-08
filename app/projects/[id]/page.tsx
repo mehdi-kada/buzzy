@@ -76,8 +76,13 @@ export default function ProjectPage() {
       const videoResponse = await databases.getDocument(
         DATABASE_ID,
         VIDEOS_COLLECTION_ID,
-        projectId
+        projectId,[
+          Query.select(['*', 'transcript.*']) // Fetch all video fields and related transcript fields
+        ]
       );
+
+      console.log("Fetched video response:", videoResponse);
+      console.log("the video transcript user is : ", videoResponse.transcript.userId);
 
       const videoData = videoResponse as unknown as Video;
       

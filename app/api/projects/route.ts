@@ -29,14 +29,17 @@ export async function GET(request: Request) {
       VIDEOS_COLLECTION_ID,
       [
         Query.equal('userId', userId),
+        Query.limit(25),
+        Query.orderDesc("$createdAt")
       ]
     );
+
     
     // Map projects to include processing status
     const projectsWithStatus = response.documents.map(doc => ({
       ...doc,
       // Use actual database status field, with fallback logic
-      status: doc.status || (doc.clipIds && doc.clipIds.length > 0 ? 'completed' : 'processing'),
+      status: doc.status ,
     }));
     
     return new Response(JSON.stringify(projectsWithStatus), {

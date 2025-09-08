@@ -44,7 +44,9 @@ export default async ({ req, res, log, error }) => {
           config.DATABASE_ID,
           config.VIDEOS_COLLECTION_ID,
           transcriptDoc.videoId,
-          { clipIds: processedClipIds }
+          { clipIds: processedClipIds,
+            status: 'completed'
+           }
       );
     }
     
