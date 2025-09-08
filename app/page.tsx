@@ -32,13 +32,13 @@ export default function Home() {
           <h1 className="text-2xl font-bold text-gray-900">Buzzler</h1>
           <div className="flex space-x-4">
             <Link 
-              href="/login" 
+              href="/auth/auth/login" 
               className="px-4 py-2 text-gray-700 hover:text-gray-900"
             >
               Login
             </Link>
             <Link 
-              href="/register" 
+              href="/auth/register" 
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Sign Up
@@ -57,13 +57,13 @@ export default function Home() {
           </p>
           <div className="mt-10 flex justify-center gap-3">
             <Link
-              href="/register"
+              href="/auth/register"
               className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Get Started
             </Link>
             <Link
-              href="/login"
+              href="/auth/login"
               className="px-6 py-3 bg-white text-gray-700 font-medium rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Sign In

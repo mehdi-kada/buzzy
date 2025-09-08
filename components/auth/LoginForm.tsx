@@ -90,7 +90,7 @@ export default function LoginForm() {
 
       <div className="mt-4 text-center">
         <span className="text-sm text-gray-600">Don't have an account? </span>
-        <Link href="/register" className="text-sm text-blue-600 hover:text-blue-500">
+        <Link href="/auth/register" className="text-sm text-blue-600 hover:text-blue-500">
           Sign up
         </Link>
       </div>

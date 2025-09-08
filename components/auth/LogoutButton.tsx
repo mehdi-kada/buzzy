@@ -17,7 +17,7 @@ export default function LogoutButton() {
       if (!result.success) {
         // Handle logout failure silently or show user-friendly message
       }
-      router.push('/login');
+      router.push('/auth/login');
     } catch (error) {
       // Handle logout error silently or show user-friendly message
     } finally {

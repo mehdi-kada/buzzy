@@ -7,21 +7,40 @@ import {
     openRouterAnalysis,
     createTranscript,
 } from '@/lib/transcription/helperFunctions';
+import type { TranscribeRequest, TranscribeResponse, APIErrorResponse } from '@/types';
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
     try {
-        const { audioUrl, videoId, userId } = await request.json();
+        const body: TranscribeRequest = await request.json();
+        const { audioUrl, videoId, userId } = body;
+        
         console.log("audioUrl:", audioUrl, "videoId:", videoId, "userId:", userId);
 
         if (!audioUrl || !videoId || !userId) {
-            return new Response("Missing required parameters: audioUrl, videoId, and userId", { status: 400 });
+            const error: APIErrorResponse = {
+                error: "Missing required parameters",
+                details: "audioUrl, videoId, and userId are required"
+            };
+            return new Response(JSON.stringify(error), { 
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        const apiKey = process.env.ASSEMBLYAI_API_KEY!;
+        const apiKey = process.env.ASSEMBLYAI_API_KEY;
+        if (!apiKey) {
+            const error: APIErrorResponse = {
+                error: "Server configuration error",
+                details: "AssemblyAI API key not configured"
+            };
+            return new Response(JSON.stringify(error), { 
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
 
         // Create transcript
         const {transcriptData, srtUrl} = await createTranscript(audioUrl, apiKey);
-
 
         // Analyze sentiment data with OpenRouter
         let clipsTimestamps = "";
@@ -62,23 +81,24 @@ export async function POST(request: Request) {
             console.error("Database storage error:", dbError);
         }
 
-        // create the project
-
-        const result = {
+        const result: TranscribeResponse = {
             id: transcriptData.id,
             status: transcriptData.status,
-            text: transcriptData.text,
-            confidence: transcriptData.confidence,
-            audio_duration: transcriptData.audio_duration,
-            words: transcriptData.words,
-            language_code: transcriptData.language_code,
+            text: transcriptData.text || '',
+            confidence: transcriptData.confidence || 0,
+            audio_duration: transcriptData.audio_duration || 0,
+            words: transcriptData.words || undefined,
+            language_code: transcriptData.language_code || 'en',
             transcriptId: storedTranscript?.$id,
             wordsCount: transcriptData.words?.length || 0,
             clipsTimestamps: clipsTimestamps,
             storageWarning: storedTranscript ? undefined : 'Transcript processed successfully but database storage failed'
         };
 
-        return new Response(JSON.stringify(result), { status: 200 });
+        return new Response(JSON.stringify(result), { 
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
 
     } catch (error) {
         console.error("Transcription error:", error);

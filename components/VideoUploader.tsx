@@ -44,6 +44,17 @@ useEffect(() => {
         throw new Error("User not authenticated");
       }
       
+      // Show success message immediately after upload
+      setShowSuccess(true);
+      
+      // Redirect to projects page after 1 second
+      setTimeout(() => {
+        if (!cancelled) {
+          router.push('/projects');
+        }
+      }, 1000);
+
+      // Call transcription API in background
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: {
@@ -75,14 +86,6 @@ useEffect(() => {
         throw new Error("Transcript was processed but not stored in database");
       }
 
-      // Show success message
-      setShowSuccess(true);
-      
-      // Redirect after a short delay
-      setTimeout(() => {
-        router.replace(`/projects`);
-      }, 2000);
-      
     } catch (err) {
       if (!cancelled) console.error("Failed to build video URL:", err);
     }
@@ -93,7 +96,7 @@ useEffect(() => {
   return () => {
     cancelled = true;
   };
-}, [uploadResult]);
+}, [uploadResult, router, user]);
 
   if (showSuccess) {
     return (

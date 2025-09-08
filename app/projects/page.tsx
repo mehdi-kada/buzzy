@@ -16,7 +16,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace('/login');
+      router.replace('/auth/login');
     }
   }, [user, loading, router]);
 

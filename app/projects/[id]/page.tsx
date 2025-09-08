@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { databases, storage, DATABASE_ID, VIDEOS_COLLECTION_ID } from '@/lib/appwrite';
+import { databases, storage, DATABASE_ID, VIDEOS_COLLECTION_ID, BUCKET_ID } from '@/lib/appwrite';
 import { useAuth } from '@/contexts/AuthContext';
 import { Query } from 'appwrite';
 import { Button } from '@/components/ui/button';
@@ -12,41 +12,7 @@ import { Download, Play, FileText, ArrowLeft, Clock, Scissors } from 'lucide-rea
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { toast } from 'sonner';
-
-interface Video {
-  $id: string;
-  userId: string;
-  title: string;
-  description?: string;
-  fileName: string;
-  duration?: number;
-  thumbnailId?: string;
-  status: string;
-  $createdAt: string;
-  clipIds?: string[];
-  transcript?: Transcript;
-}
-
-interface Transcript {
-  $id: string;
-  text: string;
-  transcriptFileId: string;
-  confidence: number;
-  languageCode: string;
-  audioDurationSec: number;
-  wordsCount: number;
-}
-
-interface Clip {
-  $id: string;
-  fileName: string;
-  startTime: number;
-  endTime: number;
-  duration: number;
-  text?: string;
-  bucketFileId: string;
-  sizeBytes?: number;
-}
+import type { Video, ProjectTranscript, Clip } from '@/types';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -188,6 +154,8 @@ export default function ProjectPage() {
     return `${mb.toFixed(1)} MB`;
   };
 
+  const videoViewUrl = video ? storage.getFileView(BUCKET_ID, video.$id).toString() : '';
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -253,6 +221,23 @@ export default function ProjectPage() {
             </div>
           </div>
 
+          {/* Main Video Preview */}
+          <Card className="mb-8 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="w-full bg-black">
+                {/* Use a plain video tag for preview to avoid Next.js hydration issues */}
+                {videoViewUrl && (
+                  <video
+                    key={videoViewUrl}
+                    src={videoViewUrl}
+                    controls
+                    className="w-full h-auto"
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Transcript Section */}
           {video.transcript && (
             <Card className="mb-8">
@@ -316,6 +301,14 @@ export default function ProjectPage() {
                   {clips.map((clip) => (
                     <Card key={clip.$id} className="border border-gray-200">
                       <CardContent className="p-4">
+                        {/* Clip inline preview */}
+                        <div className="mb-3 overflow-hidden rounded-md">
+                          <video
+                            src={storage.getFileView(process.env.NEXT_PUBLIC_APPWRITE_CLIPS_BUCKET_ID || 'clips', clip.bucketFileId).toString()}
+                            controls
+                            className="w-full h-auto"
+                          />
+                        </div>
                         <div className="flex justify-between items-start mb-3">
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">Clip {clips.indexOf(clip) + 1}</p>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, ChangeEvent } from "react";
 import { VideoUploadService } from "@/lib/videos/videoUploadService";
-import type { UploadVideoResult, UploadVideoMetadata } from "@/interfaces/videoUpload";
+import type { UploadVideoResult, UploadVideoMetadata } from "@/types";
 // Removed UploadProgress import since we normalize progress object in service
 
 interface FormStateMeta {

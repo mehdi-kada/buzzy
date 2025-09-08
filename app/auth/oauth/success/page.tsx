@@ -15,10 +15,10 @@ export default function OAuthSuccess() {
           await account.getSession('current');
           router.push('/dashboard');
         } catch {
-          router.push('/login?error=oauth_failed');
+          router.push('/auth/login?error=oauth_failed');
         }
       } catch (error) {
-        router.push('/login?error=oauth_failed');
+        router.push('/auth/login?error=oauth_failed');
       }
     };
 
