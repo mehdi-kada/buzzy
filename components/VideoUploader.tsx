@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import { useVideoUpload } from "@/hooks/useVideoUpload";
 import { storage } from "@/lib/appwrite";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VideoUploader = () => {
@@ -24,6 +24,7 @@ const VideoUploader = () => {
   } = useVideoUpload();
 
   const router = useRouter();
+  const [showSuccess, setShowSuccess] = useState(false);
 
 useEffect(() => {
   if (!uploadResult) return;
@@ -74,7 +75,13 @@ useEffect(() => {
         throw new Error("Transcript was processed but not stored in database");
       }
 
-      console.log("transcripts:", transcripts); 
+      // Show success message
+      setShowSuccess(true);
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        router.replace(`/projects`);
+      }, 2000);
       
     } catch (err) {
       if (!cancelled) console.error("Failed to build video URL:", err);
@@ -87,6 +94,23 @@ useEffect(() => {
     cancelled = true;
   };
 }, [uploadResult]);
+
+  if (showSuccess) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Successful!</h2>
+          <p className="text-gray-600 mb-4">Your video is being processed. You'll be redirected to your projects page shortly.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">

@@ -1,0 +1,17 @@
+{
+  "name": "video-processor",
+  "version": "1.0.0",
+  "description": "Appwrite function for processing video clips using FFmpeg",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "node-appwrite": "^18.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}

@@ -1,6 +1,4 @@
 
-// videoUploadService.ts
-
 import { ID, Query, type Models, Permission, Role } from "appwrite";
 import { storage, BUCKET_ID, DATABASE_ID, databases, VIDEOS_COLLECTION_ID, account } from "../appwrite";
 import { getVideoDuration, validateVideoFile } from "./videoValidation";
@@ -21,11 +19,8 @@ export class VideoUploadService {
       }
 
       const duration = await getVideoDuration(file as any as Blob);
-
       const videoId = ID.unique();
 
-      // By providing the onUploadProgress callback, you ensure the SDK uses chunked uploads,
-      // which is more stable and avoids the HTTP/2 protocol error.
       const uploadResult = await storage.createFile(
         BUCKET_ID,
         videoId,
@@ -66,6 +61,8 @@ export class VideoUploadService {
           tags,
           category: metadata.category || "uncategorized",
           thumbnailId: metadata.thumbnailId || null,
+          status: "uploaded", // Set initial status
+          clipIds: [], // Initialize empty clip array
         }
       );
 

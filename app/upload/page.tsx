@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import VideoUploader from "@/components/VideoUploader";
+import Navigation from "@/components/Navigation";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function UploadPage() {
   const { user, loading } = useAuth();
@@ -17,8 +19,11 @@ export default function UploadPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen bg-gray-100">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen">
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
@@ -28,8 +33,10 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
-      <VideoUploader />
+    <div className="min-h-screen bg-gray-100">
+      <div className="py-12">
+        <VideoUploader />
+      </div>
     </div>
   );
 }

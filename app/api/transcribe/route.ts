@@ -1,11 +1,11 @@
 import { Client, Databases, ID } from 'node-appwrite';
-import { DATABASE_ID, TRANSCRIPT_TABLE_ID } from '@/lib/appwrite';
+import { DATABASE_ID, TRANSCRIPT_TABLE_ID, VIDEOS_COLLECTION_ID } from '@/lib/appwrite';
 import {
-    createTranscript,
-    pollTranscript,
     prepareTranscriptPayload,
     storeTranscriptInDatabase,
-    formatErrorResponse
+    formatErrorResponse,
+    openRouterAnalysis,
+    createTranscript,
 } from '@/lib/transcription/helperFunctions';
 
 export async function POST(request: Request) {
@@ -20,33 +20,61 @@ export async function POST(request: Request) {
         const apiKey = process.env.ASSEMBLYAI_API_KEY!;
 
         // Create transcript
-        const transcriptData = await createTranscript(audioUrl, apiKey);
+        const {transcriptData, srtUrl} = await createTranscript(audioUrl, apiKey);
 
-        // Poll for completion
-        const transcript = await pollTranscript(transcriptData.id, apiKey);
 
-        // Store in database
+        // Analyze sentiment data with OpenRouter
+        let clipsTimestamps = "";
+        try {
+            if (transcriptData.sentiment_analysis_results && transcriptData.sentiment_analysis_results.length > 0) {
+                console.log("Analyzing sentiment data with OpenRouter...");
+                clipsTimestamps = await openRouterAnalysis(transcriptData.sentiment_analysis_results);
+                console.log("OpenRouter analysis completed");
+            }
+        } catch (openRouterError) {
+            console.error("OpenRouter analysis error:", openRouterError);
+            // Continue with empty clipsTimestamps if OpenRouter fails
+        }
+
+        // Store in transcripts table
         let storedTranscript: any | null = null;
         try {
-            const payload = prepareTranscriptPayload(transcript, videoId, userId);
+            const payload = prepareTranscriptPayload(transcriptData, videoId, userId, clipsTimestamps, srtUrl);
             storedTranscript = await storeTranscriptInDatabase(payload);
+            
+            // Update video status to processing after transcript is created
+            const client = new Client()
+                .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+                .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!)
+                .setKey(process.env.APPWRITE_API_KEY!);
+            
+            const databases = new Databases(client);
+            
+            await databases.updateDocument(
+                DATABASE_ID,
+                VIDEOS_COLLECTION_ID,
+                videoId,
+                {
+                    status: 'processing',
+                }
+            );
         } catch (dbError) {
             console.error("Database storage error:", dbError);
         }
 
-        
+        // create the project
 
         const result = {
-            id: transcript.id,
-            status: transcript.status,
-            text: transcript.text,
-            confidence: transcript.confidence,
-            audio_duration: transcript.audio_duration,
-            words: transcript.words,
-            language_code: transcript.language_code,
-            sentiment_analysis_results: transcript.sentiment_analysis_results,
+            id: transcriptData.id,
+            status: transcriptData.status,
+            text: transcriptData.text,
+            confidence: transcriptData.confidence,
+            audio_duration: transcriptData.audio_duration,
+            words: transcriptData.words,
+            language_code: transcriptData.language_code,
             transcriptId: storedTranscript?.$id,
-            wordsCount: transcript.words?.length || 0,
+            wordsCount: transcriptData.words?.length || 0,
+            clipsTimestamps: clipsTimestamps,
             storageWarning: storedTranscript ? undefined : 'Transcript processed successfully but database storage failed'
         };
 
