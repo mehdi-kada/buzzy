@@ -34,9 +34,6 @@ export async function createTranscript(audio_url:string, apiKey:string) {
      
 }
 
-// Helper to poll for transcript completion with timeout
-
-
 // Helper to prepare the database payload
 export function prepareTranscriptPayload(transcript: any, videoId: string, userId: string, clipsTimestamps?: string, srtUrl?: string) {
     return {
@@ -125,7 +122,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "openai/gpt-oss-20b:free", //grok model
+        model: "qwen/qwen3-30b-a3b:free", //grok model
         messages: [
             {
                 role: "system",
@@ -137,8 +134,15 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
             },
         ],
         temperature: 0.7,
-    response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        extra_body: {
+        reasoning: {
+            effort: "high"
+        }
+    }
     });
+
+    console.log("OpenRouter response:", response);
 
     let content = response.choices[0]?.message?.content || "[]";
     
@@ -159,24 +163,21 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     // Validate that it's valid JSON and extract clips array
     try {
         const parsed = JSON.parse(content);
-        
+        console.log("Parsed OpenRouter content:", parsed);
         // If it's already an array, return it
         if (Array.isArray(parsed)) {
             return JSON.stringify(parsed);
         }
-        
         // If it's an object with clips array, extract it
         if (parsed.clips && Array.isArray(parsed.clips)) {
             return JSON.stringify(parsed.clips);
         }
-        
         // If it's an object but no clips array, try to find any array property
         for (const key in parsed) {
             if (Array.isArray(parsed[key])) {
                 return JSON.stringify(parsed[key]);
             }
         }
-        
         console.error("No clips array found in response:", content);
         return "[]";
     } catch (e) {
