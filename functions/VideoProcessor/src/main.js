@@ -84,6 +84,16 @@ export default async ({ req, res, log, error }) => {
     if (mainThumbnailId) filesToClean.push(tempThumbnailPath);
     await cleanupTempFiles(filesToClean);
     
+    // Delete the original video from Appwrite storage after processing
+    try {
+      log(`Attempting to delete original video from bucket ${config.VIDEOS_BUCKET_ID}: ${transcriptDoc.videoId}`);
+      await storage.deleteFile(config.VIDEOS_BUCKET_ID, transcriptDoc.videoId);
+      log(`Successfully deleted original video: ${transcriptDoc.videoId}`);
+    } catch (deleteError) {
+      error(`Failed to delete original video ${transcriptDoc.videoId}. Error: ${deleteError.message}`);
+      // Do not fail the entire function if deletion fails. Just log it and continue.
+    }
+    
     log(`Successfully processed ${processedClipIds.length}/${clipsData.length} clips`);
     
     return res.json({

@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import type { ProjectCardData } from '@/types';
-import { storage, BUCKET_ID, THUMBNAIL_BUCKET_ID } from '@/lib/appwrite';
+import { storage, THUMBNAIL_BUCKET_ID } from '@/lib/appwrite';
 import { statusConfig } from '@/lib/constants';
 import { relativeCreatedAt, formatViewCount, formatDuration } from '@/lib/projects/helperFunctions';
 
@@ -15,7 +15,6 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const isProcessing = normalized === 'processing' || normalized === 'uploaded';
   const isClickable = !isProcessing;
   const createdLabel = useMemo(() => relativeCreatedAt(project.$createdAt), [project.$createdAt]);
-  const videoUrl = useMemo(() => storage.getFileView(BUCKET_ID, project.$id).toString(), [project.$id]);
   const posterUrl = useMemo(() => {
     if (!project.thumbnailId) return undefined;
     try {
@@ -25,105 +24,28 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
     }
   }, [project.thumbnailId]);
 
-  // State to manage whether the video is playing or showing thumbnail
-  const [isPlaying, setIsPlaying] = useState(false);
-
   const metrics: string[] = [];
   if (project.clipCount) metrics.push(`${project.clipCount} clips`);
   if (project.postCount) metrics.push(`${project.postCount} posts`);
   if (project.viewCount) metrics.push(`${formatViewCount(project.viewCount)} views`);
 
   const Media = () => {
-    const ref = useRef<HTMLVideoElement | null>(null);
-    
-    // Render thumbnail with play button when not playing
-    if (!isPlaying) {
-      return (
-        <div className="w-full overflow-hidden rounded-t-xl">
-          <AspectRatio ratio={16 / 9}>
-            <div className="relative h-full w-full bg-gray-100">
-              {/* Thumbnail image */}
-              {posterUrl ? (
-                <img
-                  src={posterUrl}
-                  alt={project.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 h-full w-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">No thumbnail</span>
-                </div>
-              )}
-              
-              {/* Play button overlay */}
-              <div 
-                className="absolute inset-0 flex items-center justify-center cursor-pointer group"
-                onClick={() => setIsPlaying(true)}
-              >
-                {/* Semi-transparent overlay */}
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
-                
-                {/* Play button */}
-                <div className="relative z-10 bg-white/80 hover:bg-white rounded-full p-4 transition-all group-hover:scale-105">
-                  <svg 
-                    className="w-8 h-8 text-gray-900 ml-1" 
-                    fill="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Top gradient for chip readability */}
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/10 to-transparent" />
-
-              {/* Status chip */}
-              <div className="absolute left-3 top-3">
-                <span
-                  className={[
-                    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 shadow-sm backdrop-blur',
-                    status.bg,
-                    status.text,
-                    status.ring,
-                  ].join(' ')}
-                >
-                  <span className="mr-1.5">{status.emoji}</span>
-                  {status.label}
-                </span>
-              </div>
-
-              {/* Duration pill */}
-              {project.duration && (
-                <div className="absolute right-3 bottom-3">
-                  <div className="rounded bg-black/75 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
-                    {formatDuration(Number(project.duration))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </AspectRatio>
-        </div>
-      );
-    }
-    
-    // Render video player when playing
     return (
       <div className="w-full overflow-hidden rounded-t-xl">
         <AspectRatio ratio={16 / 9}>
           <div className="relative h-full w-full bg-gray-100">
-            {/* Video player */}
-            <video
-              ref={ref}
-              src={videoUrl}
-              poster={posterUrl}
-              muted
-              playsInline
-              autoPlay
-              controls
-              preload="metadata"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            {/* Thumbnail image */}
+            {posterUrl ? (
+              <img
+                src={posterUrl}
+                alt={project.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 h-full w-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500">No thumbnail</span>
+              </div>
+            )}
 
             {/* Top gradient for chip readability */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/10 to-transparent" />
