@@ -1,42 +1,13 @@
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ProjectCardData } from '@/types';
-import { storage, BUCKET_ID } from '@/lib/appwrite';
+import { storage, BUCKET_ID, THUMBNAIL_BUCKET_ID } from '@/lib/appwrite';
+import { statusConfig } from '@/lib/constants';
+import { relativeCreatedAt, formatViewCount, formatDuration } from '@/lib/projects/helperFunctions';
 
-// Map backend statuses to UI chips (emoji + label + colors)
-const statusConfig: Record<string, { emoji: string; label: string; bg: string; text: string; ring: string }> = {
-  completed:  { emoji: '✓',  label: 'Completed',  bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-  published:  { emoji: '✓',  label: 'Published',  bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
-  processing: { emoji: '⏳', label: 'Processing', bg: 'bg-amber-50',   text: 'text-amber-700',   ring: 'ring-amber-200' },
-  uploaded:   { emoji: '⏳', label: 'Processing', bg: 'bg-amber-50',   text: 'text-amber-700',   ring: 'ring-amber-200' },
-  failed:     { emoji: '❌', label: 'Failed',     bg: 'bg-rose-50',    text: 'text-rose-700',    ring: 'ring-rose-200' },
-  draft:      { emoji: '📝', label: 'Draft',      bg: 'bg-slate-50',   text: 'text-slate-700',   ring: 'ring-slate-200' },
-  default:    { emoji: '📝', label: 'Draft',      bg: 'bg-slate-50',   text: 'text-slate-700',   ring: 'ring-slate-200' },
-};
 
-function relativeCreatedAt(iso: string): string {
-  const then = new Date(iso);
-  if (Number.isNaN(then.getTime())) return 'Created recently';
-  const now = new Date();
-  const diffMs = Math.max(0, now.getTime() - then.getTime());
-  const mins = Math.floor(diffMs / (1000 * 60));
-  if (mins < 1) return 'Created just now';
-  if (mins < 60) return `Created ${mins} minute${mins === 1 ? '' : 's'} ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `Created ${hours} hour${hours === 1 ? '' : 's'} ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `Created ${days} day${days === 1 ? '' : 's'} ago`;
-  const weeks = Math.floor(days / 7);
-  return `Created ${weeks} week${weeks === 1 ? '' : 's'} ago`;
-}
-
-function formatViewCount(count: number): string {
-  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-  return count.toString();
-}
 
 export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const normalized = (project.status || 'draft').toLowerCase();
@@ -48,12 +19,14 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const posterUrl = useMemo(() => {
     if (!project.thumbnailId) return undefined;
     try {
-      // Best-effort: if thumbnail is an image in the same bucket, generate a preview URL
-      return storage.getFilePreview(BUCKET_ID, project.thumbnailId, 1280, 720).toString();
+      return storage.getFilePreview(THUMBNAIL_BUCKET_ID, project.thumbnailId, 1280, 720).toString();
     } catch {
       return undefined;
     }
   }, [project.thumbnailId]);
+
+  // State to manage whether the video is playing or showing thumbnail
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const metrics: string[] = [];
   if (project.clipCount) metrics.push(`${project.clipCount} clips`);
@@ -62,28 +35,94 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
 
   const Media = () => {
     const ref = useRef<HTMLVideoElement | null>(null);
+    
+    // Render thumbnail with play button when not playing
+    if (!isPlaying) {
+      return (
+        <div className="w-full overflow-hidden rounded-t-xl">
+          <AspectRatio ratio={16 / 9}>
+            <div className="relative h-full w-full bg-gray-100">
+              {/* Thumbnail image */}
+              {posterUrl ? (
+                <img
+                  src={posterUrl}
+                  alt={project.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 h-full w-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500">No thumbnail</span>
+                </div>
+              )}
+              
+              {/* Play button overlay */}
+              <div 
+                className="absolute inset-0 flex items-center justify-center cursor-pointer group"
+                onClick={() => setIsPlaying(true)}
+              >
+                {/* Semi-transparent overlay */}
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors"></div>
+                
+                {/* Play button */}
+                <div className="relative z-10 bg-white/80 hover:bg-white rounded-full p-4 transition-all group-hover:scale-105">
+                  <svg 
+                    className="w-8 h-8 text-gray-900 ml-1" 
+                    fill="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Top gradient for chip readability */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/10 to-transparent" />
+
+              {/* Status chip */}
+              <div className="absolute left-3 top-3">
+                <span
+                  className={[
+                    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 shadow-sm backdrop-blur',
+                    status.bg,
+                    status.text,
+                    status.ring,
+                  ].join(' ')}
+                >
+                  <span className="mr-1.5">{status.emoji}</span>
+                  {status.label}
+                </span>
+              </div>
+
+              {/* Duration pill */}
+              {project.duration && (
+                <div className="absolute right-3 bottom-3">
+                  <div className="rounded bg-black/75 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
+                    {formatDuration(Number(project.duration))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </AspectRatio>
+        </div>
+      );
+    }
+    
+    // Render video player when playing
     return (
       <div className="w-full overflow-hidden rounded-t-xl">
         <AspectRatio ratio={16 / 9}>
-          <div
-            className="relative h-full w-full bg-gray-100"
-            onMouseEnter={() => ref.current?.play()}
-            onMouseLeave={() => {
-              if (ref.current) {
-                ref.current.pause();
-                ref.current.currentTime = 0;
-              }
-            }}
-          >
-            {/* Video preview */}
+          <div className="relative h-full w-full bg-gray-100">
+            {/* Video player */}
             <video
               ref={ref}
               src={videoUrl}
               poster={posterUrl}
               muted
               playsInline
+              autoPlay
+              controls
               preload="metadata"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+              className="absolute inset-0 h-full w-full object-cover"
             />
 
             {/* Top gradient for chip readability */}
@@ -101,11 +140,6 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
               >
                 <span className="mr-1.5">{status.emoji}</span>
                 {status.label}
-                {isProcessing && (
-                  <span className="ml-2 inline-flex items-center text-gray-500">
-                    <LoadingSpinner className="h-3.5 w-3.5" />
-                  </span>
-                )}
               </span>
             </div>
 
@@ -113,7 +147,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
             {project.duration && (
               <div className="absolute right-3 bottom-3">
                 <div className="rounded bg-black/75 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
-                  {project.duration}
+                  {formatDuration(Number(project.duration))}
                 </div>
               </div>
             )}
@@ -144,8 +178,8 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
 
         {isProcessing && (
           <div className="flex items-center gap-2 text-xs text-amber-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-            Processing: generating clips…
+            <LoadingSpinner className="h-2 w-2 text-amber-700" />
+            <span>Processing: generating clips…</span>
           </div>
         )}
       </div>

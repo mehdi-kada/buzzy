@@ -50,8 +50,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       status: project.status || (project.clipIds && project.clipIds.length > 0 ? 'completed' : 'processing'),
     };
     
-    
-    
     return new Response(JSON.stringify(projectWithStatus), {
       status: 200,
       headers: {

@@ -60,3 +60,14 @@ Return ONLY:
 - Sort clips by "start" ascending.
 - Ensure every clip is within 50,000–180,000 ms and clips do not overlap.
 `;
+
+
+export const statusConfig: Record<string, { emoji: string; label: string; bg: string; text: string; ring: string }> = {
+  completed:  { emoji: '✓',  label: 'Completed',  bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
+  published:  { emoji: '✓',  label: 'Published',  bg: 'bg-emerald-50', text: 'text-emerald-700', ring: 'ring-emerald-200' },
+  processing: { emoji: '⏳', label: 'Processing', bg: 'bg-amber-50',   text: 'text-amber-700',   ring: 'ring-amber-200' },
+  uploaded:   { emoji: '⏳', label: 'Processing', bg: 'bg-amber-50',   text: 'text-amber-700',   ring: 'ring-amber-200' },
+  failed:     { emoji: '❌', label: 'Failed',     bg: 'bg-rose-50',    text: 'text-rose-700',    ring: 'ring-rose-200' },
+  draft:      { emoji: '📝', label: 'Draft',      bg: 'bg-slate-50',   text: 'text-slate-700',   ring: 'ring-slate-200' },
+  default:    { emoji: '📝', label: 'Draft',      bg: 'bg-slate-50',   text: 'text-slate-700',   ring: 'ring-slate-200' },
+};

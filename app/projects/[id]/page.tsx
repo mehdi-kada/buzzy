@@ -13,6 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { toast } from 'sonner';
 import type { Video, ProjectTranscript, Clip } from '@/types';
+import { formatTime, formatClipDuration, formatFileSize } from '@/lib/projects/helperFunctions';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -47,8 +48,6 @@ export default function ProjectPage() {
         ]
       );
 
-      console.log("Fetched video response:", videoResponse);
-      console.log("the video transcript user is : ", videoResponse.transcript.userId);
 
       const videoData = videoResponse as unknown as Video;
       
@@ -137,22 +136,7 @@ export default function ProjectPage() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
-  const formatDuration = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    return formatTime(seconds);
-  };
-
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size';
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
-  };
 
   const videoViewUrl = video ? storage.getFileView(BUCKET_ID, video.$id).toString() : '';
 
@@ -312,8 +296,8 @@ export default function ProjectPage() {
                         <div className="flex justify-between items-start mb-3">
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">Clip {clips.indexOf(clip) + 1}</p>
-                            <p>{formatDuration(clip.startTime)} - {formatDuration(clip.endTime)}</p>
-                            <p>Duration: {formatDuration(clip.duration)}</p>
+                            <p>{formatClipDuration(clip.startTime)} - {formatClipDuration(clip.endTime)}</p>
+                            <p>Duration: {formatClipDuration(clip.duration)}</p>
                             <p>{formatFileSize(clip.sizeBytes)}</p>
                           </div>
                         </div>

@@ -1,11 +1,11 @@
 import { ID } from 'node-appwrite';
 import { existsSync, readFileSync, unlinkSync, rmSync, statSync } from 'fs';
 import { InputFile } from 'node-appwrite/file';
-import { extractClip, extractClipWithDrawtext } from '../utils/ffmpeg.js';
+import { extractClip, extractClipWithDrawtext, generateThumbnail } from '../utils/ffmpeg.js';
 import { getClipTranscriptData } from './transcriptService.js';
 
 
-export async function processClips(clipsData, transcriptDoc, tempVideoPath, clients, loggers) {
+export async function processClips(clipsData, transcriptDoc, tempVideoPath, videoDimensions, clients, loggers) {
   const { databases, storage, config } = clients;
   const { log, error } = loggers;
   const processedClipIds = [];
@@ -27,6 +27,7 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, clie
     const clip = clipsData[i];
     const clipId = ID.unique();
     let tempClipPath = null;
+    let tempThumbnailPath = null;
     
     try {
       // Convert milliseconds to seconds for ffmpeg
@@ -49,7 +50,6 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, clie
       try {
         if (transcriptDoc.transcriptFileId) {
           log(`Getting transcript data for clip ${i + 1} with transcriptFileId: ${transcriptDoc.transcriptFileId}`);
-          // Get structured subtitle data instead of creating ASS file
           const subtitleData = await getClipTranscriptData(
             transcriptDoc.transcriptFileId,
             clip.start,
@@ -60,8 +60,7 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, clie
           
           log(`Retrieved ${subtitleData.length} subtitle entries for clip ${i + 1}`);
           
-          // Use the new drawtext approach
-          await extractClipWithDrawtext(tempVideoPath, startTime, duration, tempClipPath, subtitleData);
+          await extractClipWithDrawtext(tempVideoPath, startTime, duration, tempClipPath, subtitleData, videoDimensions);
           log(`Clip ${i + 1} processed with subtitles using drawtext`);
         } else {
           log(`No transcriptFileId found for video ${transcriptDoc.videoId}`);
@@ -70,44 +69,67 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, clie
       } catch (transcriptError) {
         error(`Failed to get transcript for clip ${i + 1}: ${transcriptError.message}`);
         error(`Transcript error stack: ${transcriptError.stack}`);
-        // Fallback to clip without subtitles
         await extractClip(tempVideoPath, startTime, duration, tempClipPath);
         log(`Clip ${i + 1} processed without subtitles (fallback)`);
       }
 
-      // Check if clip file was created successfully
       if (!existsSync(tempClipPath)) {
         throw new Error(`Clip file was not created: ${tempClipPath}`);
       }
       log(`Clip file created successfully: ${tempClipPath}`);
 
-      // Read the clip file and upload to storage
-      const clipFileBuffer = readFileSync(tempClipPath);
-      log(`Clip file size: ${clipFileBuffer.length} bytes`);
+      // Generate thumbnail for the clip
+      let thumbnailFileId = null;
+      try {
+        const thumbnailFileName = `thumb_${safeFileName}.jpg`;
+        tempThumbnailPath = `/tmp/${thumbnailFileName}`;
+        tempFilesToCleanup.push(tempThumbnailPath);
+        await generateThumbnail(tempClipPath, tempThumbnailPath, '00:00:01.000');
+        // Log bucket id used so missing/misconfigured buckets are obvious in logs
+        log(`Uploading thumbnail to bucket: ${config.THUMBNAILS_BUCKET_ID}`);
+        const thumbnailFile = await storage.createFile(
+          config.THUMBNAILS_BUCKET_ID,
+          ID.unique(),
+          InputFile.fromPath(tempThumbnailPath, thumbnailFileName)
+        );
+        if (!thumbnailFile || !thumbnailFile.$id) throw new Error('Thumbnail upload did not return a file id');
+        thumbnailFileId = thumbnailFile.$id;
+      } catch (thumbError) {
+        error(`Failed to generate thumbnail for clip ${i + 1}: ${thumbError.message}`);
+      }
 
+      // Upload clip video
+      log(`Uploading clip to bucket: ${config.CLIPS_BUCKET_ID}`);
       const clipFile = await storage.createFile(
         config.CLIPS_BUCKET_ID,
         clipId,
         InputFile.fromPath(tempClipPath, clipFileName)
       );
+      if (!clipFile || !clipFile.$id) throw new Error('Clip upload did not return a file id');
 
       // Create clip metadata document
+      const clipDocument = {
+        userId: transcriptDoc.userId,
+        videoId: transcriptDoc.videoId,
+        fileName: clipFileName,
+        startTime: clip.start,
+        endTime: clip.end,
+        duration: clip.end - clip.start,
+        text: clip.text || '',
+        sizeBytes: statSync(tempClipPath).size,
+        mimeType: 'video/mp4',
+        bucketFileId: clipFile.$id,
+      };
+
+      if (thumbnailFileId) {
+        clipDocument.thumbnailFileId = thumbnailFileId;
+      }
+
       await databases.createDocument(
         config.DATABASE_ID,
         config.CLIPS_COLLECTION_ID,
         clipId,
-        {
-          userId: transcriptDoc.userId,
-          videoId: transcriptDoc.videoId,
-          fileName: clipFileName,
-          startTime: clip.start,
-          endTime: clip.end,
-          duration: clip.end - clip.start,
-          text: clip.text || '',
-          sizeBytes: clipFileBuffer.length,
-          mimeType: 'video/mp4',
-          bucketFileId: clipFile.$id
-        }
+        clipDocument
       );
 
       processedClipIds.push(clipId);
@@ -117,44 +139,16 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, clie
       error(`Failed to process clip ${i + 1}: ${clipError.message}`);
       error(`Error stack: ${clipError.stack}`);
       
-      // Clean up any created files for this failed clip
-      if (tempClipPath && existsSync(tempClipPath)) {
-        try {
-          unlinkSync(tempClipPath);
-        } catch (cleanupError) {
-          error(`Failed to cleanup failed clip file: ${cleanupError.message}`);
-        }
-      }
-      
-      // Continue with next clip even if this one fails
     } finally {
-      // Clean up temporary clip file if it still exists
+      // Clean up temporary files for this clip iteration
       if (tempClipPath && existsSync(tempClipPath)) {
-        try {
-          unlinkSync(tempClipPath);
-        } catch (cleanupError) {
-          error(`Failed to cleanup clip file: ${cleanupError.message}`);
-        }
+        try { unlinkSync(tempClipPath); } catch (e) { error(`Cleanup failed for ${tempClipPath}: ${e.message}`); }
+      }
+      if (tempThumbnailPath && existsSync(tempThumbnailPath)) {
+        try { unlinkSync(tempThumbnailPath); } catch (e) { error(`Cleanup failed for ${tempThumbnailPath}: ${e.message}`); }
       }
     }
   }
-
-  // Final cleanup of any remaining temp files
-  tempFilesToCleanup.forEach(filePath => {
-    if (existsSync(filePath)) {
-      try {
-        // Check if it's a directory (temp dirs from transcript service)
-        const stats = statSync(filePath);
-        if (stats.isDirectory()) {
-          rmSync(filePath, { recursive: true, force: true });
-        } else {
-          unlinkSync(filePath);
-        }
-      } catch (cleanupError) {
-        error(`Failed to cleanup temp file/dir ${filePath}: ${cleanupError.message}`);
-      }
-    }
-  });
 
   return processedClipIds;
 }
