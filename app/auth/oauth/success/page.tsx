@@ -1,29 +1,46 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { account } from '@/lib/appwrite';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function OAuthSuccess() {
   const router = useRouter();
+  const { checkAuth } = useAuth();
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     const handleOAuthSuccess = async () => {
       try {
-        // Check if we have a valid session
-        try {
-          await account.getSession('current');
-          router.push('/dashboard');
-        } catch {
-          router.push('/auth/login?error=oauth_failed');
-        }
+        // Get the current session to verify authentication
+        await account.getSession('current');
+        
+        // Update the auth context with the new user data
+        await checkAuth();
+        setChecked(true);
+        
+        // Redirect immediately to dashboard
+        router.push('/dashboard');
       } catch (error) {
+        // If there's an error, redirect to login with error message
         router.push('/auth/login?error=oauth_failed');
       }
     };
 
     handleOAuthSuccess();
-  }, [router]);
+  }, [router, checkAuth]);
+
+  // If we've checked auth and still haven't redirected, show a simple message
+  if (checked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="mt-4 text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen">

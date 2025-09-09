@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import LogoutButton from '@/components/auth/LogoutButton';
 
 const Navigation = () => {
   const pathname = usePathname();
@@ -35,6 +36,9 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            <div className="flex items-center">
+              <LogoutButton />
+            </div>
           </div>
         </div>
       </div>

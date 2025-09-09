@@ -1,15 +1,6 @@
 import { ID } from 'node-appwrite';
 
-/**
- * Send an email notification to a user when video processing is complete
- * @param {Object} clients - Appwrite clients { messaging, databases, storage, config }
- * @param {Object} loggers - Logging functions { log, error }
- * @param {string} userId - The ID of the user to send the email to
- * @param {string} videoId - The ID of the video that was processed
- * @param {number} processedClips - Number of clips successfully processed
- * @param {number} totalClips - Total number of clips that were supposed to be processed
- * @param {string|null} thumbnailId - ID of the thumbnail file (if available)
- */
+
 export async function sendProcessingCompleteEmail(clients, loggers, userId, videoId, processedClips, totalClips, thumbnailId = null) {
   const { messaging, config } = clients;
   const { log, error } = loggers;

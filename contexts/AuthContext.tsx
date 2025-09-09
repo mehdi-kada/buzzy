@@ -79,13 +79,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = async (email: string) => {
     try {
-      await account.createRecovery(email, 'http://localhost:3000/reset-password');
+      await account.createRecovery(email, `${window.location.origin}/reset-password`);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
+  // Check auth state on initial load and when the component mounts
   useEffect(() => {
     checkAuth();
   }, []);
