@@ -7,12 +7,13 @@ import Link from 'next/link';
 import { useProjects } from '@/hooks/useProjects';
 import ProjectCard from '@/components/projects/projectCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { ProjectsPagination } from '@/components/projects/Pagination';
 
 
 export default function ProjectsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const { projects, loading: loadingProjects, error } = useProjects(user?.$id || '');
+  const { projects, loading: loadingProjects, error, currentPage, setCurrentPage, totalPages } = useProjects(user?.$id || '');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -64,11 +65,20 @@ export default function ProjectsPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-              {projects.map((project) => (
-                <ProjectCard key={project.$id} project={project} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                {projects.map((project) => (
+                  <ProjectCard key={project.$id} project={project} />
+                ))}
+              </div>
+              <div className="mt-8 flex justify-center">
+                <ProjectsPagination 
+                  currentPage={currentPage} 
+                  totalPages={totalPages} 
+                  onPageChange={setCurrentPage} 
+                />
+              </div>
+            </>
           )}
         </div>
       </main>

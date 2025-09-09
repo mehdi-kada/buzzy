@@ -5,6 +5,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
     
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Missing userId parameter' }), {
@@ -15,6 +17,28 @@ export async function GET(request: Request) {
       });
     }
     
+    // Validate pagination parameters
+    if (page < 1) {
+      return new Response(JSON.stringify({ error: 'Page must be greater than 0' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+    
+    if (limit < 1 || limit > 100) {
+      return new Response(JSON.stringify({ error: 'Limit must be between 1 and 100' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+    
+    // Calculate offset for Appwrite pagination
+    const offset = (page - 1) * limit;
+    
     // Initialize Appwrite client
     const client = new Client()
       .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
@@ -23,13 +47,14 @@ export async function GET(request: Request) {
 
     const databases = new Databases(client);
     
-    // Get all projects for the user
+    // Get paginated projects for the user
     const response = await databases.listDocuments(
       DATABASE_ID,
       VIDEOS_COLLECTION_ID,
       [
         Query.equal('userId', userId),
-        Query.limit(25),
+        Query.limit(limit),
+        Query.offset(offset),
         Query.orderDesc("$createdAt")
       ]
     );
@@ -42,7 +67,11 @@ export async function GET(request: Request) {
       status: doc.status ,
     }));
     
-    return new Response(JSON.stringify(projectsWithStatus), {
+    // Return projects with total count for pagination
+    return new Response(JSON.stringify({
+      projects: projectsWithStatus,
+      total: response.total
+    }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
