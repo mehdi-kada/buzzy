@@ -2,6 +2,7 @@ import { initializeAppwrite } from './appwrite.js';
 import { downloadVideoFile, cleanupTempFiles } from './utils/fileHandler.js';
 import { processClips} from './services/clipService.js';
 import { getVideoDimensions, generateThumbnail } from './utils/ffmpeg.js';
+import { sendProcessingCompleteEmail, sendProcessingFailedEmail, sendNoClipsEmail } from './utils/messaging.js';
 import { ID } from 'node-appwrite';
 import { InputFile } from 'node-appwrite/file';
 
@@ -12,21 +13,32 @@ export default async ({ req, res, log, error }) => {
       return res.text("Pong");
     }
 
-    const { databases, storage, config } = await initializeAppwrite(req);
+    const { databases, storage, messaging, config } = await initializeAppwrite(req);
     
     // Process and validate payload
-      const transcriptDoc = req.body || req;
-      if (!transcriptDoc) return;
+    const transcriptDoc = req.body || req;
+    if (!transcriptDoc) return;
 
-  // Check if clipsTimestamps exists and is not empty
-      if (!transcriptDoc.clipsTimestamps || transcriptDoc.clipsTimestamps.trim() === '') {
-        log('No clips timestamps found in transcript document');
-        log(`Document structure: ${JSON.stringify(transcriptDoc, null, 2)}`);
-        res.json({ success: false, message: 'No clips timestamps to process' });
-        return null;
+    // Check if clipsTimestamps exists and is not empty
+    if (!transcriptDoc.clipsTimestamps || transcriptDoc.clipsTimestamps.trim() === '') {
+      log('No clips timestamps found in transcript document');
+      log(`Document structure: ${JSON.stringify(transcriptDoc, null, 2)}`);
+      
+      // Send notification email about no clips
+      if (transcriptDoc.userId) {
+        await sendNoClipsEmail(
+          { messaging, config },
+          { log, error },
+          transcriptDoc.userId,
+          transcriptDoc.videoId
+        );
       }
+      
+      res.json({ success: false, message: 'No clips timestamps to process' });
+      return null;
+    }
 
-      log(`the transcript doc is : ${JSON.stringify(transcriptDoc)}`);
+    log(`the transcript doc is : ${JSON.stringify(transcriptDoc)}`);
 
     
     // Validate clips data
@@ -69,7 +81,6 @@ export default async ({ req, res, log, error }) => {
       thumbnailId: mainThumbnailId
     };
 
-
     if (processedClipIds.length > 0 || mainThumbnailId) {
         await databases.updateDocument(
           config.DATABASE_ID,
@@ -94,6 +105,19 @@ export default async ({ req, res, log, error }) => {
       // Do not fail the entire function if deletion fails. Just log it and continue.
     }
     
+    // Send success email notification
+    if (transcriptDoc.userId) {
+      await sendProcessingCompleteEmail(
+        { messaging, config },
+        { log, error },
+        transcriptDoc.userId,
+        transcriptDoc.videoId,
+        processedClipIds.length,
+        clipsData.length,
+        mainThumbnailId
+      );
+    }
+    
     log(`Successfully processed ${processedClipIds.length}/${clipsData.length} clips`);
     
     return res.json({
@@ -105,6 +129,24 @@ export default async ({ req, res, log, error }) => {
     });
     
   } catch (err) {
+    // Send failure email notification
+    try {
+      const { messaging } = await initializeAppwrite(req);
+      const transcriptDoc = req.body || req || {};
+      
+      if (transcriptDoc?.userId) {
+        await sendProcessingFailedEmail(
+          { messaging },
+          { log, error },
+          transcriptDoc.userId,
+          transcriptDoc.videoId,
+          err.message
+        );
+      }
+    } catch (emailError) {
+      error(`Failed to send failure notification email: ${emailError.message}`);
+    }
+    
     error(`Error processing video clips: ${err.message}`);
     return res.json({
       success: false,

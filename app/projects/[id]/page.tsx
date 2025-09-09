@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { databases, storage, DATABASE_ID, VIDEOS_COLLECTION_ID, BUCKET_ID } from '@/lib/appwrite';
+import { databases, storage, DATABASE_ID, VIDEOS_COLLECTION_ID } from '@/lib/appwrite';
 import { useAuth } from '@/contexts/AuthContext';
 import { Query } from 'appwrite';
 import { Button } from '@/components/ui/button';
@@ -136,10 +136,6 @@ export default function ProjectPage() {
     }
   };
 
-
-
-  const videoViewUrl = video ? storage.getFileView(BUCKET_ID, video.$id).toString() : '';
-
   if (loading) {
     return (
       <ProtectedRoute>
@@ -204,23 +200,6 @@ export default function ProjectPage() {
               </div>
             </div>
           </div>
-
-          {/* Main Video Preview */}
-          <Card className="mb-8 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="w-full bg-black">
-                {/* Use a plain video tag for preview to avoid Next.js hydration issues */}
-                {videoViewUrl && (
-                  <video
-                    key={videoViewUrl}
-                    src={videoViewUrl}
-                    controls
-                    className="w-full h-auto"
-                  />
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Transcript Section */}
           {video.transcript && (

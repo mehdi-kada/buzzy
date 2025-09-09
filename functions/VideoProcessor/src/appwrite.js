@@ -1,4 +1,4 @@
-import { Client, Databases, Storage } from 'node-appwrite';
+import { Client, Databases, Storage, Messaging } from 'node-appwrite';
 
 export async function initializeAppwrite(req) {
   const client = new Client()
@@ -8,6 +8,7 @@ export async function initializeAppwrite(req) {
 
   const databases = new Databases(client);
   const storage = new Storage(client);
+  const messaging = new Messaging(client);
   
   const config = {
     DATABASE_ID: process.env.APPWRITE_FUNCTION_DATABASE_ID || '68b2d533003210de565e',
@@ -30,5 +31,5 @@ export async function initializeAppwrite(req) {
     APPWRITE_TRANSCRIPT_BUCKET_ID: process.env.APPWRITE_FUNCTION_TRANSCRIPT_BUCKET_ID || process.env.APPWRITE_TRANSCRIPT_BUCKET_ID || ''
   };
   
-  return { databases, storage, config };
+  return { databases, storage, messaging, config };
 }
