@@ -8,7 +8,7 @@ from .services.uploadService import upload_file_to_storage, cleanup_temp_file
 
 # This Appwrite function will be executed every time your function is triggered
 def main(context):
-  data = json.loads(context.payload) if context.payload else {}
+  data = context.req.body if context.req.body else {}
   video_url = data.get('video_url')
   bucket_id = data.get('bucket_id')
 
@@ -24,4 +24,4 @@ def main(context):
   # cleanup for the temp file
   cleanup_temp_file(video_temp_path)
 
-  return context.response.json({'file_url': file_url}, 200)
+  return context.res.json({'file_url': file_url})

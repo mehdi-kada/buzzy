@@ -140,7 +140,7 @@
             "enabled": true,
             "logging": true,
             "entrypoint": "src/main.py",
-            "commands": "pip install -r requirements.txt",
+            "commands": "apk add --no-cache wget tar xz && wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && tar -xf ffmpeg-release-amd64-static.tar.xz && mv ffmpeg-*-amd64-static/ffmpeg . && pip install -r requirements.txt",
             "path": "functions/importVideo"
         }
     ]

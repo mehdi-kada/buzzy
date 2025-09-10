@@ -12,6 +12,7 @@ def download_video(url: str) -> str:
         'format': 'bestvideo+bestaudio/best',
         'noplaylist': True,
         'merge_output_format': 'mp4',
+        'ffmpeg_location': '/usr/local/server/src/function/ffmpeg',
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
