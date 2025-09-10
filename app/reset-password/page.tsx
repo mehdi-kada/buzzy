@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await account.updateRecovery(userId, secret, password, confirmPassword);
+      await account.updateRecovery(userId, secret, password);
       setMessage('Password successfully reset! You can now login with your new password.');
       
       // Redirect to login after 3 seconds

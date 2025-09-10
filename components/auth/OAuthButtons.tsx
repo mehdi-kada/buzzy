@@ -1,15 +1,14 @@
 'use client';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { account } from '@/lib/appwrite';
 import { OAuthProvider } from 'appwrite';
 
 export default function OAuthButtons() {
+  const {loginWithGoogle} = useAuth(); 
+
   const handleGoogleLogin = () => {
-    account.createOAuth2Session(
-      OAuthProvider.Google,
-      `http://localhost:3000/auth/oauth/success`,
-      `http://localhost:3000/auth/oauth/failure`
-    );
+    loginWithGoogle();
   };
 
   return (
