@@ -14,10 +14,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push('/auth/login');
     }
   }, [user, loading, router]);
 
+  // Show loading spinner while checking auth state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -26,6 +27,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // If not loading and no user, redirect will be handled by useEffect
   if (!user) {
     return null;
   }

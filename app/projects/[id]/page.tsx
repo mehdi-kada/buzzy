@@ -12,41 +12,8 @@ import { Download, Play, FileText, ArrowLeft, Clock, Scissors } from 'lucide-rea
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { toast } from 'sonner';
-
-interface Video {
-  $id: string;
-  userId: string;
-  title: string;
-  description?: string;
-  fileName: string;
-  duration?: number;
-  thumbnailId?: string;
-  status: string;
-  $createdAt: string;
-  clipIds?: string[];
-  transcript?: Transcript;
-}
-
-interface Transcript {
-  $id: string;
-  text: string;
-  transcriptFileId: string;
-  confidence: number;
-  languageCode: string;
-  audioDurationSec: number;
-  wordsCount: number;
-}
-
-interface Clip {
-  $id: string;
-  fileName: string;
-  startTime: number;
-  endTime: number;
-  duration: number;
-  text?: string;
-  bucketFileId: string;
-  sizeBytes?: number;
-}
+import type { Video, ProjectTranscript, Clip } from '@/types';
+import { formatTime, formatClipDuration, formatFileSize } from '@/lib/projects/helperFunctions';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -81,8 +48,6 @@ export default function ProjectPage() {
         ]
       );
 
-      console.log("Fetched video response:", videoResponse);
-      console.log("the video transcript user is : ", videoResponse.transcript.userId);
 
       const videoData = videoResponse as unknown as Video;
       
@@ -169,23 +134,6 @@ export default function ProjectPage() {
     } finally {
       setDownloadingTranscript(false);
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatDuration = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    return formatTime(seconds);
-  };
-
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size';
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
   };
 
   if (loading) {
@@ -316,11 +264,19 @@ export default function ProjectPage() {
                   {clips.map((clip) => (
                     <Card key={clip.$id} className="border border-gray-200">
                       <CardContent className="p-4">
+                        {/* Clip inline preview */}
+                        <div className="mb-3 overflow-hidden rounded-md">
+                          <video
+                            src={storage.getFileView(process.env.NEXT_PUBLIC_APPWRITE_CLIPS_BUCKET_ID || 'clips', clip.bucketFileId).toString()}
+                            controls
+                            className="w-full h-auto"
+                          />
+                        </div>
                         <div className="flex justify-between items-start mb-3">
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">Clip {clips.indexOf(clip) + 1}</p>
-                            <p>{formatDuration(clip.startTime)} - {formatDuration(clip.endTime)}</p>
-                            <p>Duration: {formatDuration(clip.duration)}</p>
+                            <p>{formatClipDuration(clip.startTime)} - {formatClipDuration(clip.endTime)}</p>
+                            <p>Duration: {formatClipDuration(clip.duration)}</p>
                             <p>{formatFileSize(clip.sizeBytes)}</p>
                           </div>
                         </div>

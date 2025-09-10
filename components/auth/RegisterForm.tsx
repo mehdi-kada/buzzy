@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import OAuthButtons from './OAuthButtons';
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -138,9 +139,21 @@ export default function RegisterForm() {
         </button>
       </form>
 
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t"></span>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      <OAuthButtons />
+
       <div className="mt-4 text-center">
         <span className="text-sm text-gray-600">Already have an account? </span>
-        <Link href="/login" className="text-sm text-blue-600 hover:text-blue-500">
+        <Link href="/auth/login" className="text-sm text-blue-600 hover:text-blue-500">
           Sign in
         </Link>
       </div>

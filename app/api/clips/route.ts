@@ -1,16 +1,21 @@
 import { Client, Databases, Query } from 'node-appwrite';
 import { DATABASE_ID } from '@/lib/appwrite';
+import type { Clip, APIErrorResponse } from '@/types';
 
 const CLIPS_COLLECTION_ID = 'clips';
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<Response> {
   try {
     const { searchParams } = new URL(request.url);
     const videoId = searchParams.get('videoId');
     const userId = searchParams.get('userId');
     
     if (!videoId || !userId) {
-      return new Response(JSON.stringify({ error: 'Missing videoId or userId parameter' }), {
+      const error: APIErrorResponse = {
+        error: 'Missing required parameters',
+        details: 'videoId and userId are required'
+      };
+      return new Response(JSON.stringify(error), {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +42,9 @@ export async function GET(request: Request) {
       ]
     );
     
-    return new Response(JSON.stringify(response.documents), {
+    const clips: Clip[] = response.documents as unknown as Clip[];
+    
+    return new Response(JSON.stringify(clips), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +52,11 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     console.error('Error fetching clips:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const apiError: APIErrorResponse = {
+      error: 'Failed to fetch clips',
+      details: error.message
+    };
+    return new Response(JSON.stringify(apiError), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
     "node-appwrite": "^18.0.0"
   },
   "devDependencies": {

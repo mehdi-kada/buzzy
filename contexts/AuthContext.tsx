@@ -1,73 +1,59 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { account } from '@/lib/appwrite';
-import { Models } from 'appwrite';
+import { ID, Models, OAuthProvider } from 'appwrite';
+import { AuthContextType } from '@/interfaces/authContextInterface';
 
-interface AuthContextType {
-  user: Models.User<Models.Preferences> | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<{ success: boolean; error?: string }>;
-  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
-  checkAuth: () => Promise<void>;
-}
+type LoginResult = { success: boolean; error?: string };
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
+    setLoading(true);
     try {
-      const user = await account.get();
-      setUser(user);
+      const u = await account.get();
+      setUser(u);
     } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const login = async (email: string, password: string) => {
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     try {
-      const session = await account.createEmailPasswordSession(email, password);
-      
-      // Force a check of the current user after session creation
-      const user = await account.get();
-      setUser(user);
-      
+      await account.createEmailPasswordSession(email, password);
+      const u = await account.get();
+      setUser(u);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string): Promise<LoginResult> => {
     try {
-      // Create the user account
-      const user = await account.create('unique()', email, password, name);
-      
-      // Create session for the new user
-      const session = await account.createEmailPasswordSession(email, password);
-      
-      // Get the user data and set it
-      const currentUser = await account.get();
-      setUser(currentUser);
-      
+      await account.create(ID.unique(), email, password, name);
+      await account.createEmailPasswordSession(email, password);
+      const u = await account.get();
+      setUser(u);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<LoginResult> => {
     try {
       await account.deleteSession('current');
       setUser(null);
@@ -77,38 +63,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string): Promise<LoginResult> => {
     try {
-      await account.createRecovery(email, 'http://localhost:3000/reset-password');
+      await account.createRecovery(email, `${window.location.origin}/reset-password`);
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const loginWithGoogle = () => {
+    const origin = window.location.origin;
+    return account.createOAuth2Session(
+      OAuthProvider.Google,
+      `${origin}/auth/oauth/success`,
+      `${origin}/auth/oauth/failure`,
+      ['email', 'profile', 'openid'],
+    );
+  };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      login,
-      register,
-      logout,
-      resetPassword,
-      checkAuth
-    }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, logout, resetPassword, checkAuth, loginWithGoogle }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };

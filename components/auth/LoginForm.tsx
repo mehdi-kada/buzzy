@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import OAuthButtons from './OAuthButtons';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -13,6 +14,13 @@ export default function LoginForm() {
 
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Check for OAuth error
+  const oauthError = searchParams.get('error');
+  if (oauthError === 'oauth_failed' && !error) {
+    setError('Google authentication failed. Please try again.');
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -82,6 +90,18 @@ export default function LoginForm() {
         </button>
       </form>
 
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t"></span>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+      <OAuthButtons />
+
       <div className="mt-4 text-center">
         <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
           Forgot your password?
@@ -90,7 +110,7 @@ export default function LoginForm() {
 
       <div className="mt-4 text-center">
         <span className="text-sm text-gray-600">Don't have an account? </span>
-        <Link href="/register" className="text-sm text-blue-600 hover:text-blue-500">
+        <Link href="/auth/register" className="text-sm text-blue-600 hover:text-blue-500">
           Sign up
         </Link>
       </div>

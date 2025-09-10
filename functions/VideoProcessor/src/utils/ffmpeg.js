@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import ffmpegStatic from 'ffmpeg-static';
+import ffprobeStatic from 'ffprobe-static';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,20 +8,89 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/**
- * Escapes text for the FFmpeg drawtext filter.
- * This is crucial to prevent errors when subtitles contain special characters.
- * @param {string} text - The text to be escaped.
- * @returns {string} The escaped text.
- */
+export function getVideoDimensions(videoPath) {
+  return new Promise((resolve, reject) => {
+    const ffprobe = spawn(ffprobeStatic.path, [
+      '-v', 'error',
+      '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height',
+      '-of', 'json',
+      videoPath
+    ]);
+
+    let stdout = '';
+    let stderr = '';
+
+    ffprobe.stdout.on('data', (data) => {
+      stdout += data;
+    });
+
+    ffprobe.stderr.on('data', (data) => {
+      stderr += data;
+    });
+
+    ffprobe.on('close', (code) => {
+      if (code === 0) {
+        try {
+          const output = JSON.parse(stdout);
+          const { width, height } = output.streams[0];
+          resolve({ width, height });
+        } catch (e) {
+          reject(new Error('Failed to parse ffprobe output.'));
+        }
+      } else {
+        reject(new Error(`ffprobe process exited with code ${code}: ${stderr}`));
+      }
+    });
+
+    ffprobe.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+
 function escapeDrawtext(text) {
   return text
-    .replace(/\\/g, '\\\\\\\\') // Must be first
+    .replace(/\\/g, '\\') // Must be first
     .replace(/'/g, '’')       // Replace single quotes with a right single quote
-    .replace(/:/g, '\\\\:')
-    .replace(/%/g, '\\\\%')
-    .replace(/,/g, '\\\\,');
+    .replace(/:/g, '\:')
+    .replace(/%/g, '\\%')
+    .replace(/,/g, '\\,')
 }
+
+export function generateThumbnail(videoPath, thumbnailPath, timestamp) {
+  return new Promise((resolve, reject) => {
+    const ffmpeg = spawn(ffmpegStatic, [
+      '-i',
+      videoPath,
+      '-ss',
+      timestamp,
+      '-vframes',
+      '1',
+      thumbnailPath,
+      '-y' // Overwrite output file if it exists
+    ]);
+
+    let stderr = '';
+    ffmpeg.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    ffmpeg.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`FFmpeg (thumbnail) process exited with code ${code}: ${stderr}`));
+      }
+    });
+
+    ffmpeg.on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
 
 // Function to extract a clip without subtitles (remains unchanged)
 export async function extractClip(tempVideoPath, startTime, duration, tempClipPath) {
@@ -60,8 +130,8 @@ export async function extractClip(tempVideoPath, startTime, duration, tempClipPa
   });
 }
 
-// Updated function to extract clip with burned-in subtitles
-export async function extractClipWithDrawtext(tempVideoPath, startTime, duration, tempClipPath, subtitleData) {
+
+export async function extractClipWithDrawtext(tempVideoPath, startTime, duration, tempClipPath, subtitleData, videoDimensions) {
   return new Promise((resolve, reject) => {
     let ffmpeg;
     const timeout = setTimeout(() => {
@@ -74,6 +144,11 @@ export async function extractClipWithDrawtext(tempVideoPath, startTime, duration
       return reject(new Error(`Font file not found at path: ${fontPath}`));
     }
 
+    const { width, height } = videoDimensions;
+    const isPortrait = height > width;
+    const fontSize = isPortrait ? Math.round(width / 15) : Math.round(width / 25);
+
+
     const drawtextFilters = subtitleData.map(entry => {
       const startSeconds = entry.start / 1000;
       const endSeconds = entry.end / 1000;
@@ -84,7 +159,7 @@ export async function extractClipWithDrawtext(tempVideoPath, startTime, duration
       const style = [
         `fontfile='${fontPath}'`,
         `text='${text}'`,
-        `fontsize=22`,
+        `fontsize=${fontSize}`,
         `fontcolor=white`,
         `box=1`, // Enable the background box
         `boxcolor=black@0.6`, // Black with 60% opacity

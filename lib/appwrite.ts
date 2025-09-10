@@ -14,6 +14,7 @@ export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 export const VIDEOS_COLLECTION_ID = "videos";
 export const TRANSCRIPT_TABLE_ID = "transcripts";
 export const CLIPS_COLLECTION_ID = "clips";
+export const THUMBNAIL_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_THUMBNAILS_BUCKET_ID!;
 
 
 

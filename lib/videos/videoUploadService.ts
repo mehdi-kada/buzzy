@@ -2,7 +2,7 @@
 import { ID, Query, type Models, Permission, Role } from "appwrite";
 import { storage, BUCKET_ID, DATABASE_ID, databases, VIDEOS_COLLECTION_ID, account } from "../appwrite";
 import { getVideoDuration, validateVideoFile } from "./videoValidation";
-import { UploadVideoMetadata, UploadVideoResult } from "@/interfaces/videoUpload";
+import { UploadVideoMetadata, UploadVideoResult } from "@/types";
 
 
 export class VideoUploadService {
