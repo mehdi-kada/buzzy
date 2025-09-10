@@ -43,18 +43,15 @@ useEffect(() => {
       if (!user) {
         throw new Error("User not authenticated");
       }
-      
-      // Show success message immediately after upload
+
       setShowSuccess(true);
       
-      // Redirect to projects page after 1 second
       setTimeout(() => {
         if (!cancelled) {
           router.push('/projects');
         }
       }, 1000);
 
-      // Call transcription API in background
       const response = await fetch("/api/transcribe", {
         method: "POST",
         headers: {
@@ -77,7 +74,6 @@ useEffect(() => {
         throw new Error(`Transcription error: ${transcripts.error}`);
       }
 
-      // Check if transcript was stored successfully
       if (transcripts.storageWarning) {
         console.warn("Storage warning:", transcripts.storageWarning);
       }

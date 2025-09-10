@@ -1,15 +1,18 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import VideoUploader from "@/components/VideoUploader";
+import ImportVideo from "@/components/ImportVideo";
 import Navigation from "@/components/Navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
 
 export default function UploadPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'upload' | 'import'>('upload');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -35,7 +38,26 @@ export default function UploadPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-12">
-        <VideoUploader />
+        <div className="max-w-2xl mx-auto">
+          <div className="flex border-b border-gray-200 mb-8">
+            <Button
+              variant={activeTab === 'upload' ? 'default' : 'ghost'}
+              className="rounded-b-none"
+              onClick={() => setActiveTab('upload')}
+            >
+              Upload Video
+            </Button>
+            <Button
+              variant={activeTab === 'import' ? 'default' : 'ghost'}
+              className="rounded-b-none"
+              onClick={() => setActiveTab('import')}
+            >
+              Import from URL
+            </Button>
+          </div>
+          
+          {activeTab === 'upload' ? <VideoUploader /> : <ImportVideo />}
+        </div>
       </div>
     </div>
   );
