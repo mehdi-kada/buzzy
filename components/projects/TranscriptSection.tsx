@@ -51,16 +51,16 @@ export default function TranscriptSection({ video }: TranscriptSectionProps) {
   }
 
   return (
-    <Card className="mb-8">
+    <Card className="mb-8 border border-amber-100 dark:border-amber-900/40 bg-white dark:bg-gray-900">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+          <FileText className="h-5 w-5 text-amber-700 dark:text-amber-300" />
           Full Transcript
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex justify-between items-start mb-4">
-          <div className="space-y-1 text-sm text-gray-600">
+          <div className="space-y-1 text-sm text-amber-900/80 dark:text-amber-300/80">
             <p>Language: {video.transcript.languageCode.toUpperCase()}</p>
             <p>Confidence: {(video.transcript.confidence).toFixed(1)}%</p>
             <p>Words: {video.transcript.wordsCount.toLocaleString()}</p>
@@ -69,7 +69,7 @@ export default function TranscriptSection({ video }: TranscriptSectionProps) {
           <Button
             onClick={downloadTranscript}
             disabled={downloadingTranscript}
-            className="shrink-0"
+            className="shrink-0 bg-amber-600 text-white hover:bg-amber-700"
           >
             {downloadingTranscript ? (
               <LoadingSpinner className="h-4 w-4 mr-2" />
@@ -80,8 +80,8 @@ export default function TranscriptSection({ video }: TranscriptSectionProps) {
           </Button>
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto">
-          <p className="text-sm text-gray-700 leading-relaxed">
+        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 max-h-48 overflow-y-auto border border-amber-100 dark:border-amber-900/40">
+          <p className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed">
             {video.transcript.text.substring(0, 500)}
             {video.transcript.text.length > 500 && '...'}
           </p>

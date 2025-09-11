@@ -58,6 +58,10 @@ function PaginationLink({
           variant: isActive ? "outline" : "ghost",
           size,
         }),
+        // Amber theme styling
+        isActive
+          ? 'border-amber-300 text-amber-800 dark:border-amber-800 dark:text-amber-200'
+          : 'text-amber-700 hover:bg-amber-50 dark:text-amber-200 dark:hover:bg-amber-900/30',
         className
       )}
       {...props}
@@ -73,7 +77,7 @@ function PaginationPrevious({
     <PaginationLink
       aria-label="Go to previous page"
       size="default"
-      className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
+  className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       {...props}
     >
       <ChevronLeftIcon />
@@ -90,7 +94,7 @@ function PaginationNext({
     <PaginationLink
       aria-label="Go to next page"
       size="default"
-      className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
+  className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
       {...props}
     >
       <span className="hidden sm:block">Next</span>
@@ -107,7 +111,7 @@ function PaginationEllipsis({
     <span
       aria-hidden
       data-slot="pagination-ellipsis"
-      className={cn("flex size-9 items-center justify-center", className)}
+  className={cn("flex size-9 items-center justify-center text-amber-700 dark:text-amber-300", className)}
       {...props}
     >
       <MoreHorizontalIcon className="size-4" />

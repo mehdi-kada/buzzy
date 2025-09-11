@@ -33,7 +33,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
     return (
       <div className="w-full overflow-hidden rounded-t-xl">
         <AspectRatio ratio={16 / 9}>
-          <div className="relative h-full w-full bg-gray-100">
+          <div className="relative h-full w-full bg-amber-100 dark:bg-amber-900/40 ring-1 ring-amber-200 dark:ring-amber-800">
             {/* Thumbnail image */}
             {posterUrl ? (
               <img
@@ -42,8 +42,8 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
-              <div className="absolute inset-0 h-full w-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">No thumbnail</span>
+              <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center">
+                <span className="text-amber-700 dark:text-amber-300">No thumbnail</span>
               </div>
             )}
 
@@ -68,7 +68,7 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
             {/* Duration pill */}
             {project.duration && (
               <div className="absolute right-3 bottom-3">
-                <div className="rounded bg-black/75 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
+                <div className="rounded bg-black/70 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
                   {formatDuration(Number(project.duration))}
                 </div>
               </div>
@@ -82,25 +82,25 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const Content = () => (
     <div className="flex flex-col gap-3 p-4">
       <div className="space-y-1.5">
-        <h3 className="truncate text-base font-semibold text-gray-900">
+        <h3 className="truncate text-base font-semibold text-gray-900 dark:text-white">
           {project.title}
         </h3>
-        <p className="text-sm text-gray-600 line-clamp-2">
+        <p className="text-sm text-amber-900/80 dark:text-amber-200/80 line-clamp-2">
           {project.description || 'No description'}
         </p>
       </div>
 
       <div className="space-y-1">
-        <div className="text-xs text-gray-500">{createdLabel}</div>
+        <div className="text-xs text-amber-800/80 dark:text-amber-300/80">{createdLabel}</div>
         {metrics.length > 0 && (
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-amber-800/80 dark:text-amber-300/80">
             {metrics.join(' • ')}
           </div>
         )}
 
         {isProcessing && (
-          <div className="flex items-center gap-2 text-xs text-amber-700">
-            <LoadingSpinner className="h-2 w-2 text-amber-700" />
+          <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+            <LoadingSpinner className="h-2 w-2 text-amber-700 dark:text-amber-300" />
             <span>Processing: generating clips…</span>
           </div>
         )}
@@ -111,9 +111,12 @@ export default function ProjectCard({ project }: { project: ProjectCardData }) {
   const Card = () => (
     <article
       className={[
-        'group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm',
+        'group relative overflow-hidden rounded-xl border shadow-sm',
         'transition-all duration-200',
-        isClickable ? 'hover:shadow-md hover:border-gray-300' : 'opacity-95',
+        'border-amber-100 hover:border-amber-200',
+        'bg-white dark:bg-gray-900',
+        'dark:border-amber-900/40',
+        isClickable ? 'hover:shadow-md' : 'opacity-95',
       ].join(' ')}
       aria-disabled={!isClickable}
     >

@@ -110,7 +110,7 @@ export default function ProjectPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900 flex items-center justify-center">
           <LoadingSpinner className="h-8 w-8" />
         </div>
       </ProtectedRoute>
@@ -120,11 +120,11 @@ export default function ProjectPage() {
   if (error || !video) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Project Not Found</h1>
-            <p className="text-gray-600 mb-4">{error || 'The requested project could not be found.'}</p>
-            <Button onClick={() => router.push('/projects')}>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-700 to-yellow-700 bg-clip-text text-transparent mb-2">Project Not Found</h1>
+            <p className="text-amber-800/90 dark:text-amber-200/90 mb-4">{error || 'The requested project could not be found.'}</p>
+            <Button onClick={() => router.push('/projects')} className="bg-amber-600 hover:bg-amber-700 text-white">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Projects
             </Button>
@@ -136,14 +136,14 @@ export default function ProjectPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <Button 
               variant="ghost" 
               onClick={() => router.push('/projects')}
-              className="mb-4"
+              className="mb-4 text-amber-800 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-200"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Projects
@@ -151,11 +151,11 @@ export default function ProjectPage() {
             
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{video.title}</h1>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-yellow-700 bg-clip-text text-transparent mb-2">{video.title}</h1>
                 {video.description && (
-                  <p className="text-gray-600 mb-4">{video.description}</p>
+                  <p className="text-amber-900/80 dark:text-amber-200/80 mb-4">{video.description}</p>
                 )}
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-4 text-sm text-amber-800/80 dark:text-amber-300/80">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
                     {video.duration ? formatTime(video.duration) : 'Unknown duration'}
@@ -164,7 +164,7 @@ export default function ProjectPage() {
                     <Scissors className="h-4 w-4" />
                     {clips.length} clips generated
                   </div>
-                  <Badge variant={video.status === 'completed' ? 'default' : 'secondary'}>
+                  <Badge className="bg-amber-600 text-white">
                     {video.status}
                   </Badge>
                 </div>

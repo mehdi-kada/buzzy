@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <AuthProvider>
-          <div className="min-h-screen bg-gray-100">
+          <div className="min-h-screen bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900">
           <Navigation />
           <main className="container mx-auto px-4 py-6">
             {children}

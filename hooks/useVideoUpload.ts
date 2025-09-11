@@ -94,6 +94,7 @@ export const useVideoUpload = () => {
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     } catch (err: any) {
+      console.error("Upload error in hook:", err);
       setError(err?.message || "Upload failed");
     } finally {
       setIsUploading(false);

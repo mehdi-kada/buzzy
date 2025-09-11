@@ -34,32 +34,32 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br  from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900">
+      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Video Projects</h2>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">Your Video Projects</h2>
             <Link 
               href="/upload" 
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 py-2 rounded-md bg-amber-600 text-white hover:bg-amber-700 shadow-sm ring-1 ring-amber-300/60"
             >
               Upload Video
             </Link>
           </div>
           
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700">{error}</p>
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-950 dark:to-gray-900 border border-amber-200 dark:border-amber-900/40 rounded-lg p-4 mb-6">
+              <p className="text-amber-900 dark:text-amber-200">{error}</p>
             </div>
           )}
           
           {projects.length === 0 ? (
-            <div className="bg-white overflow-hidden shadow rounded-lg p-8 text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-              <p className="text-gray-500 mb-4">Get started by uploading your first video</p>
+            <div className="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-lg p-8 text-center border border-amber-100 dark:border-amber-900/40">
+              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-2">No projects yet</h3>
+              <p className="text-amber-800/80 dark:text-amber-200/80 mb-4">Get started by uploading your first video</p>
               <Link 
                 href="/upload" 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 rounded-md bg-amber-600 text-white hover:bg-amber-700 shadow-sm ring-1 ring-amber-300/60"
               >
                 Upload Video
               </Link>

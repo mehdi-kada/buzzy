@@ -8,10 +8,10 @@ export const validateVideoFile = (file: any) => {
     'video/mov',
     'video/quicktime'
   ];
-  
-  const maxSize = 100 * 1024 * 1024; // 100MB
-  const minSize = 1024; // 1KB
-  
+
+  const maxSize = 4000 * 1024 * 1024; // 4000MB
+  const minSize = 1 * 1024 * 1024; // 10MB
+
   const errors = [];
   
   if (!file) {

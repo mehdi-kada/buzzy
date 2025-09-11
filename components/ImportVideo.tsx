@@ -58,6 +58,7 @@ const ImportVideo = () => {
           video_url: url,
           bucket_id: BUCKET_ID,
           user_id: user.$id,
+          async: true,
         })
       );
 
@@ -127,28 +128,28 @@ const ImportVideo = () => {
 
   if (showSuccess) {
     return (
-      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-amber-100 dark:border-amber-900/40">
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Import Successful!</h2>
-          <p className="text-gray-600 mb-4">Your video is being processed. You'll be redirected to your projects page shortly.</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Import Successful!</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">Your video is being processed. You'll be redirected to your projects page shortly.</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6">Import Video from URL</h2>
+    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-amber-100 dark:border-amber-900/40">
+      <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">Import Video from URL</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="videoUrl" className="block text-sm font-medium text-amber-900 dark:text-amber-200 mb-2">
             Video URL
           </label>
           <Input
@@ -157,10 +158,10 @@ const ImportVideo = () => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/video.mp4"
-            className="w-full"
+            className="w-full border-amber-200 focus-visible:ring-amber-500 dark:border-amber-900/40"
             disabled={isLoading}
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-300/80">
             Enter a direct link to a video file (MP4, MOV, etc.)
           </p>
         </div>
@@ -168,7 +169,7 @@ const ImportVideo = () => {
         <Button 
           type="submit" 
           disabled={isLoading || !url.trim()}
-          className="w-full"
+          className="w-full bg-amber-600 hover:bg-amber-700 text-white"
         >
           {isLoading ? 'Importing...' : 'Import Video'}
         </Button>

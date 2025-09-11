@@ -22,7 +22,7 @@ export default function UploadPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen">
           <LoadingSpinner />
@@ -36,20 +36,20 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <div className="py-12">
         <div className="max-w-2xl mx-auto">
-          <div className="flex border-b border-gray-200 mb-8">
+          <div className="flex border-b border-amber-200 dark:border-amber-900/40 mb-8">
             <Button
               variant={activeTab === 'upload' ? 'default' : 'ghost'}
-              className="rounded-b-none"
+              className={"rounded-b-none " + (activeTab === 'upload' ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'text-amber-700 hover:text-amber-800 dark:text-amber-300')}
               onClick={() => setActiveTab('upload')}
             >
               Upload Video
             </Button>
             <Button
               variant={activeTab === 'import' ? 'default' : 'ghost'}
-              className="rounded-b-none"
+              className={"rounded-b-none " + (activeTab === 'import' ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'text-amber-700 hover:text-amber-800 dark:text-amber-300')}
               onClick={() => setActiveTab('import')}
             >
               Import from URL

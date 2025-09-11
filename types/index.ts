@@ -85,6 +85,7 @@ export interface Clip extends AppwriteDocument {
   duration: number; // milliseconds
   text?: string;
   bucketFileId: string;
+  thumbnailFileId?: string | null;
   sizeBytes?: number;
   mimeType?: string;
 }
