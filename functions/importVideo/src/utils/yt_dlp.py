@@ -13,6 +13,9 @@ def download_video(url: str) -> str:
         'noplaylist': True,
         'merge_output_format': 'mp4',
         'ffmpeg_location': '/usr/local/server/src/function/ffmpeg',
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+        },
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -21,3 +24,19 @@ def download_video(url: str) -> str:
 
     return video_path
 
+
+def extract_video_metadata(url):
+    """
+    Extract metadata without downloading the video
+    """
+    ydl_opts = {
+        'quiet': True,
+        'no_warnings': True,
+        'extract_flat': False,
+        'dump_single_json': True
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+        
+    return info

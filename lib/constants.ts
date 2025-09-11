@@ -58,7 +58,6 @@ Return ONLY:
 {
 "start": <start_time_in_ms>,
 "end": <end_time_in_ms>,
-"text": "<concatenated text for that clip>",
 "captions": {
 "youtube": {
 "title": "<≤100 char title>",

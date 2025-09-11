@@ -31,7 +31,6 @@ export const useVideoUpload = () => {
   const [validationIssues, setValidationIssues] = useState<string[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  // No fallback interval; rely on Appwrite SDK progress events
 
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
