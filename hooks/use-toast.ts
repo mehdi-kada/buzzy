@@ -1,10 +1,8 @@
 'use client';
 
-import { useToast as useSonnerToast } from 'sonner';
+import { toast } from 'sonner';
 
 export function useToast() {
-  const { toast, ...rest } = useSonnerToast();
-
   return {
     toast: (props: any) => {
       toast(props.title, {
@@ -12,6 +10,5 @@ export function useToast() {
         ...props,
       });
     },
-    ...rest,
   };
 }
