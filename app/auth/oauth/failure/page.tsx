@@ -3,8 +3,9 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function OAuthFailurePage() {
+function OAuthFailureContent() {
   const params = useSearchParams();
   const error = params.get('error') || 'OAuth sign-in failed';
   return (
@@ -14,5 +15,13 @@ export default function OAuthFailurePage() {
         Try again
       </Link>
     </main>
+  );
+}
+
+export default function OAuthFailurePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OAuthFailureContent />
+    </Suspense>
   );
 }
