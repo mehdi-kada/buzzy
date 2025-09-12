@@ -63,9 +63,13 @@ const ImportVideo = () => {
       );
 
       setShowSuccess(true);
-      router.push('/projects');
 
-      toast.success('Success', { description: 'Import started. You\'ll see it in Projects shortly.' });
+      // Add a 2-second delay before redirecting
+      setTimeout(() => {
+        router.push('/projects');
+      }, 2000);
+
+      toast.success('Success', { description: "Import started. You'll see it in Projects shortly." });
     } catch (error: any) {
       console.error('Import error:', error);
       toast.error('Error', {
