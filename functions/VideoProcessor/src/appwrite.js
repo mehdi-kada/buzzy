@@ -11,24 +11,14 @@ export async function initializeAppwrite(req) {
   const messaging = new Messaging(client);
   
   const config = {
-    DATABASE_ID: process.env.APPWRITE_FUNCTION_DATABASE_ID || '68b2d533003210de565e',
-    VIDEOS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_VIDEOS_COLLECTION_ID || 'videos',
-    TRANSCRIPTS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_TRANSCRIPTS_COLLECTION_ID || 'transcripts',
-    CLIPS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_CLIPS_COLLECTION_ID || 'clips',
-    // Prefer the Appwrite function env var names, then fall back to other envs used locally.
-    VIDEOS_BUCKET_ID: process.env.APPWRITE_FUNCTION_VIDEOS_BUCKET_ID
-      || process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID
-      || process.env.VIDEOS_BUCKET_ID
-      || 'videos',
-    CLIPS_BUCKET_ID: process.env.APPWRITE_FUNCTION_CLIPS_BUCKET_ID
-      || process.env.CLIPS_BUCKET_ID
-      || 'clips',
-    // Use the function-specific var first. Do not silently assume a friendly slug exists in cloud.
-    THUMBNAILS_BUCKET_ID: process.env.APPWRITE_FUNCTION_THUMBNAILS_BUCKET_ID
-      || process.env.THUMBNAILS_BUCKET_ID
-      || process.env.NEXT_PUBLIC_APPWRITE_THUMBNAILS_BUCKET_ID
-      || 'thumbnails',
-    APPWRITE_TRANSCRIPT_BUCKET_ID: process.env.APPWRITE_FUNCTION_TRANSCRIPT_BUCKET_ID || process.env.APPWRITE_TRANSCRIPT_BUCKET_ID || ''
+    DATABASE_ID: process.env.APPWRITE_FUNCTION_DATABASE_ID,
+    VIDEOS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_VIDEOS_COLLECTION_ID,
+    TRANSCRIPTS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_TRANSCRIPTS_COLLECTION_ID,
+    CLIPS_COLLECTION_ID: process.env.APPWRITE_FUNCTION_CLIPS_COLLECTION_ID,
+    VIDEOS_BUCKET_ID: process.env.APPWRITE_FUNCTION_VIDEOS_BUCKET_ID,
+    CLIPS_BUCKET_ID: process.env.APPWRITE_FUNCTION_CLIPS_BUCKET_ID,
+    THUMBNAILS_BUCKET_ID: process.env.APPWRITE_FUNCTION_THUMBNAILS_BUCKET_ID,
+    APPWRITE_TRANSCRIPT_BUCKET_ID: process.env.APPWRITE_FUNCTION_TRANSCRIPT_BUCKET_ID
   };
   
   return { databases, storage, messaging, config };

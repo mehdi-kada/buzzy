@@ -19,6 +19,14 @@ export default async ({ req, res, log, error }) => {
     const transcriptDoc = req.body || req;
     if (!transcriptDoc) return;
 
+    const videoId = transcriptDoc.video?.$id;
+    const videoFileId = transcriptDoc.video?.fileId || transcriptDoc.videoId; // Fallback for older records
+
+    if (!videoId || !videoFileId) {
+      error('Transcript document is missing video information: video.$id or video.fileId is missing.');
+      return res.json({ success: false, message: 'Transcript document is missing critical video information.' });
+    }
+
     // Check if clipsTimestamps exists and is not empty
     if (!transcriptDoc.clipsTimestamps || transcriptDoc.clipsTimestamps.trim() === '') {
       log('No clips timestamps found in transcript document');
@@ -30,7 +38,7 @@ export default async ({ req, res, log, error }) => {
           { messaging, config },
           { log, error },
           transcriptDoc.userId,
-          transcriptDoc.videoId
+          videoId
         );
       }
       
@@ -44,19 +52,19 @@ export default async ({ req, res, log, error }) => {
     // Validate clips data
     const clipsData = JSON.parse(transcriptDoc.clipsTimestamps);
 
-    const tempVideoPath = await downloadVideoFile(storage, config, transcriptDoc.videoId);
+    const tempVideoPath = await downloadVideoFile(storage, config, videoFileId);
     const videoDimensions = await getVideoDimensions(tempVideoPath);
 
     // Generate thumbnail for the main video
     let mainThumbnailId = null;
-    const tempThumbnailPath = `/tmp/thumb_${transcriptDoc.videoId}.jpg`;
+    const tempThumbnailPath = `/tmp/thumb_${videoId}.jpg`;
     try {
       await generateThumbnail(tempVideoPath, tempThumbnailPath, '00:00:01.000');
       console.log(`Uploading main video thumbnail to bucket: ${config.THUMBNAILS_BUCKET_ID}`);
       const thumbnailFile = await storage.createFile(
         config.THUMBNAILS_BUCKET_ID,
         ID.unique(),
-        InputFile.fromPath(tempThumbnailPath, `thumb_${transcriptDoc.videoId}.jpg`)
+        InputFile.fromPath(tempThumbnailPath, `thumb_${videoId}.jpg`)
       );
       mainThumbnailId = thumbnailFile.$id;
     } catch (thumbError) {
@@ -85,7 +93,7 @@ export default async ({ req, res, log, error }) => {
         await databases.updateDocument(
           config.DATABASE_ID,
           config.VIDEOS_COLLECTION_ID,
-          transcriptDoc.videoId,
+          videoId,
           updatePayload
       );
     }
@@ -97,11 +105,11 @@ export default async ({ req, res, log, error }) => {
     
     // Delete the original video from Appwrite storage after processing
     try {
-      log(`Attempting to delete original video from bucket ${config.VIDEOS_BUCKET_ID}: ${transcriptDoc.videoId}`);
-      await storage.deleteFile(config.VIDEOS_BUCKET_ID, transcriptDoc.videoId);
-      log(`Successfully deleted original video: ${transcriptDoc.videoId}`);
+      log(`Attempting to delete original video from bucket ${config.VIDEOS_BUCKET_ID}: ${videoFileId}`);
+      await storage.deleteFile(config.VIDEOS_BUCKET_ID, videoFileId);
+      log(`Successfully deleted original video: ${videoFileId}`);
     } catch (deleteError) {
-      error(`Failed to delete original video ${transcriptDoc.videoId}. Error: ${deleteError.message}`);
+      error(`Failed to delete original video ${videoFileId}. Error: ${deleteError.message}`);
       // Do not fail the entire function if deletion fails. Just log it and continue.
     }
     
@@ -111,7 +119,7 @@ export default async ({ req, res, log, error }) => {
         { messaging, config },
         { log, error },
         transcriptDoc.userId,
-        transcriptDoc.videoId,
+        videoId,
         processedClipIds.length,
         clipsData.length,
         mainThumbnailId
@@ -135,11 +143,12 @@ export default async ({ req, res, log, error }) => {
       const transcriptDoc = req.body || req || {};
       
       if (transcriptDoc?.userId) {
+        const videoId = transcriptDoc.video?.$id || transcriptDoc.videoId;
         await sendProcessingFailedEmail(
           { messaging },
           { log, error },
           transcriptDoc.userId,
-          transcriptDoc.videoId,
+          videoId,
           err.message
         );
       }

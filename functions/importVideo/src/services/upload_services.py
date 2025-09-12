@@ -1,6 +1,7 @@
 import os
 import uuid
 import logging
+
 from appwrite.services.storage import Storage
 from appwrite.services.databases import Databases
 from appwrite.id import ID
@@ -10,6 +11,7 @@ from ..appwrite import get_appwrite_client
 def upload_file_to_storage(file_path: str, bucket_id: str):
     client = get_appwrite_client()
     storage = Storage(client)
+    project_id = os.environ.get("APPWRITE_FUNCTION_PROJECT_ID")
     # unique file id 
     file_id = str(uuid.uuid4())
 
@@ -25,7 +27,7 @@ def upload_file_to_storage(file_path: str, bucket_id: str):
     if not endpoint:
         raise ValueError("APPWRITE_FUNCTION_API_ENDPOINT environment variable not set.")
 
-    file_url = f"{endpoint}/storage/buckets/{bucket_id}/files/{uploaded_file_id}/view"
+    file_url = f"{endpoint}/storage/buckets/{bucket_id}/files/{uploaded_file_id}/view?project={project_id}"
     return {"file_id": uploaded_file_id, "file_url": file_url}
 
 
@@ -46,7 +48,7 @@ def cleanup_temp_file(file_path):
 
 
 
-def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_size):
+def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_size, file_id):
     """
     Map yt-dlp metadata to your database schema
     """
@@ -98,7 +100,8 @@ def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_s
         'transcript': None,  # Can be extracted separately if needed
         'status': 'pending',
         'tags': tags,
-        'clipIds': []  # Empty initially
+        'clipIds': [],  # Empty initially
+        'fileId': file_id  # Store the uploaded file ID
     }
 
     response = database.create_document(

@@ -98,18 +98,7 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Demo mock player */}
-          <div className="mt-12 mx-auto max-w-3xl" data-reveal>
-            <div className="relative rounded-2xl overflow-hidden border border-amber-100 dark:border-amber-900/40 shadow-sm bg-black">
-              <div className="aspect-[16/9] relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-50/10 to-yellow-50/10 dark:from-gray-800 dark:to-gray-900" />
-                <button className="absolute inset-0 m-auto h-16 w-16 rounded-full bg-amber-600 text-white hover:bg-amber-700 shadow-lg flex items-center justify-center">
-                  <Play className="h-7 w-7 ml-1" />
-                </button>
-                <div className="absolute bottom-3 right-3 text-xs text-white/90 bg-black/60 px-2 py-1 rounded">00:42</div>
-              </div>
-            </div>
-          </div>
+
         </section>
 
         {/* Trusted by */}
@@ -125,42 +114,42 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features */}
+        {/* Core capabilities (truthful) */}
         <section className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reveal>
+          {/* Upload or Import */}
           <div className="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-xl p-6 border border-amber-100 dark:border-amber-900/40">
             <div className="flex items-center justify-center w-12 h-12 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 5 17 10" />
+                <line x1="12" x2="12" y1="5" y2="21" />
               </svg>
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Automatic Clip Detection</h3>
-            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">
-              Our AI analyzes sentiment and content to identify the most engaging moments in your videos.
-            </p>
+            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Upload or import</h3>
+            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Bring videos from your device or paste a link to import from supported platforms.</p>
           </div>
-          
+
+          {/* Clip extraction (keep generic, no overpromise) */}
           <div className="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-xl p-6 border border-amber-100 dark:border-amber-900/40">
             <div className="flex items-center justify-center w-12 h-12 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M8 12h8" />
               </svg>
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Burned-in Subtitles</h3>
-            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">
-              Automatically burn subtitles directly into your video clips for better accessibility and engagement.
-            </p>
+            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Clip extraction</h3>
+            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Generate shorter segments from long videos to share across social platforms.</p>
           </div>
-          
+
+          {/* Subtitles & transcripts */}
           <div className="bg-white dark:bg-gray-900 overflow-hidden shadow-sm rounded-xl p-6 border border-amber-100 dark:border-amber-900/40">
             <div className="flex items-center justify-center w-12 h-12 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Easy Download</h3>
-            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">
-              Download your processed clips with a single click and share them on your favorite platforms.
-            </p>
+            <h3 className="mt-4 text-lg font-semibold text-amber-900 dark:text-amber-100">Subtitles & SRT</h3>
+            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Burn captions into your clips and download the transcript as an SRT file.</p>
           </div>
         </section>
 
@@ -188,39 +177,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-4" data-reveal>
-          {[
-            { label: 'Clips generated', value: '120K+' },
-            { label: 'Avg. time saved', value: '8h/wk' },
-            { label: 'Languages', value: '30+' },
-            { label: 'Uptime', value: '99.9%' },
-          ].map((s, i) => (
-            <div key={i} className="rounded-xl border border-amber-100 dark:border-amber-900/40 bg-white/70 dark:bg-gray-900/70 backdrop-blur p-4 text-center">
-              <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{s.value}</div>
-              <div className="text-xs text-amber-800/80 dark:text-amber-300/80">{s.label}</div>
-            </div>
-          ))}
-        </section>
-
-        {/* Advanced features */}
+        {/* Keep messaging realistic: optional section with tips instead of unimplemented features */}
         <section className="mt-20 grid gap-6 sm:grid-cols-2" data-reveal>
           <div className="rounded-xl border border-amber-100 dark:border-amber-900/40 bg-white dark:bg-gray-900 p-6 shadow-sm">
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-100 font-semibold">
-              <Wand2 className="h-5 w-5 text-amber-700 dark:text-amber-300" /> Smart scene detection
+              <Wand2 className="h-5 w-5 text-amber-700 dark:text-amber-300" /> Clean, creator-first workflow
             </div>
-            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Automatically detects jump-cuts and high-energy segments to build compelling clips.</p>
+            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Simple steps: upload or import, generate clips, burn subtitles, download. No clutter.</p>
             <div className="mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 p-4 text-sm text-amber-900 dark:text-amber-100">
-              Fine-tune with thresholds and let Buzzler handle the rest.
+              Start with a single long video and export a few highlight clips.
             </div>
           </div>
           <div className="rounded-xl border border-amber-100 dark:border-amber-900/40 bg-white dark:bg-gray-900 p-6 shadow-sm">
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-100 font-semibold">
-              <Settings2 className="h-5 w-5 text-amber-700 dark:text-amber-300" /> Custom templates
+              <Settings2 className="h-5 w-5 text-amber-700 dark:text-amber-300" /> Practical outputs
             </div>
-            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Choose aspect ratios, caption styles, and safe margins for perfect platform-ready clips.</p>
+            <p className="mt-2 text-amber-800/80 dark:text-amber-300/80">Export clips ready for socials and grab the accompanying SRT file for captions.</p>
             <div className="mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 p-4 text-sm text-amber-900 dark:text-amber-100">
-              Save templates to reuse across projects.
+              Keep your workflow flexible: share, schedule, or edit elsewhere.
             </div>
           </div>
         </section>
@@ -260,9 +234,11 @@ export default function Home() {
                 <AccordionTrigger>What video formats are supported?</AccordionTrigger>
                 <AccordionContent>Common formats like MP4 and MOV are supported. Large files are handled with resumable uploads.</AccordionContent>
               </AccordionItem>
-              <AccordionItem value="item-3">
-                <AccordionTrigger>Do you support different aspect ratios?</AccordionTrigger>
-                <AccordionContent>Yes, pick 9:16, 1:1, or 16:9 and more using templates.</AccordionContent>
+              <AccordionItem value="item-4">
+                <AccordionTrigger>Can I upload or import from any platform?</AccordionTrigger>
+                <AccordionContent>
+                  You can upload files directly from your device. Importing via link is supported for select platforms and will expand over time. If a link isn’t supported yet, you can always download the video and upload the file instead.
+                </AccordionContent>
               </AccordionItem>
             </Accordion>
           </div>

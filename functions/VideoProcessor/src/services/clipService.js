@@ -41,7 +41,7 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, vide
       }
 
       // Generate clip filename with safe characters
-      const safeFileName = `clip_${transcriptDoc.videoId}_${i + 1}_${Date.now()}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeFileName = `clip_${transcriptDoc.video.$id}_${i + 1}_${Date.now()}`.replace(/[^a-zA-Z0-9_-]/g, '_');
       const clipFileName = `${safeFileName}.mp4`;
       tempClipPath = `/tmp/${clipFileName}`;
       tempFilesToCleanup.push(tempClipPath);
@@ -63,7 +63,7 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, vide
           await extractClipWithDrawtext(tempVideoPath, startTime, duration, tempClipPath, subtitleData, videoDimensions);
           log(`Clip ${i + 1} processed with subtitles using drawtext`);
         } else {
-          log(`No transcriptFileId found for video ${transcriptDoc.videoId}`);
+          log(`No transcriptFileId found for video ${transcriptDoc.video.$id}`);
           throw new Error('No transcriptFileId available');
         }
       } catch (transcriptError) {
@@ -110,7 +110,7 @@ export async function processClips(clipsData, transcriptDoc, tempVideoPath, vide
       // Create clip metadata document
       const clipDocument = {
         userId: transcriptDoc.userId,
-        videoId: transcriptDoc.videoId,
+        videoId: transcriptDoc.video.$id,
         fileName: clipFileName,
         startTime: clip.start,
         endTime: clip.end,

@@ -83,8 +83,9 @@ export class VideoUploadService {
           tags,
           category: metadata.category || "uncategorized",
           thumbnailId: metadata.thumbnailId || null,
-          status: "uploaded", // Set initial status
-          clipIds: [], // Initialize empty clip array
+          status: "processing", // Set initial status
+          clipIds: [],
+          fileId: uploadResult.$id // Set fileId to uploaded file's ID
         }
       );
 

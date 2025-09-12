@@ -29,25 +29,18 @@ def main(context):
 
     video_temp_path = None
     try:
-        logging.info("Extracting video metadata...")
         meta_data = extract_video_metadata(video_url)
         
-        logging.info("Downloading video...")
         video_temp_path = download_video(video_url)
-        logging.info(f"Video downloaded to temporary path: {video_temp_path}")
 
-        logging.info("Uploading video to storage...")
         file_url = upload_file_to_storage(video_temp_path, bucket_id)
-        logging.info("Video uploaded successfully.")
+
 
         file_name = os.path.basename(video_temp_path)
         file_size = os.path.getsize(video_temp_path)
         file_mime_type = "video/mp4"
 
-        logging.info("Preparing and saving database metadata...")
-        video_id = prepare_database_metadata(meta_data, user_id, file_name, file_mime_type, file_size)
-        logging.info(f"Database metadata created with video ID: {video_id}")
-
+        video_id = prepare_database_metadata(meta_data, user_id, file_name, file_mime_type, file_size, file_url['file_id'])
         # Trigger transcription API
         transcribe_api_url = os.environ.get('TRANSCRIBE_API_URL')
         if not transcribe_api_url:

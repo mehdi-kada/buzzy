@@ -98,13 +98,13 @@ useEffect(() => {
     return (
       <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-amber-100 dark:border-amber-900/40">
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ring-2 ring-amber-500/30 bg-amber-50 dark:bg-amber-900/20">
+            <svg className="w-8 h-8 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Upload Successful!</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">Your video is being processed. You'll be redirected to your projects page shortly.</p>
+          <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100 mb-2">Upload Successful!</h2>
+          <p className="text-amber-800/80 dark:text-amber-300/80 mb-4">Your video is being processed. You'll be redirected to your projects page shortly.</p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
         </div>
       </div>
