@@ -51,71 +51,21 @@ const ImportVideo = () => {
     setIsLoading(true);
     
     try {
-      // Call Appwrite function to import video
-      const exec = await functions.createExecution(
+      // Schedule Appwrite function to import video and redirect immediately
+      functions.createExecution(
         IMPORT_VIDEO_FUNCTION_ID,
         JSON.stringify({
           video_url: url,
           bucket_id: BUCKET_ID,
           user_id: user.$id,
-          async: true,
-        })
+        }),
+       true 
       );
 
-      // Parse the function response
-      const respStr = (exec as any)?.response ?? (exec as any)?.responseBody ?? '';
-      const execStatus = (exec as any)?.status || '';
-      const execErrors = (exec as any)?.errors;
-      
-      let result: { file_url?: string; file_id?: string; video_id?: string } = {};
-      try {
-        result = respStr && typeof respStr === 'string' ? JSON.parse(respStr) : {};
-      } catch (_) {
-        throw new Error('Failed to parse function response');
-      }
-
-      if (execStatus && execStatus !== 'completed') {
-        throw new Error(execErrors || 'Import function execution failed');
-      }
-
-      if (!result.file_url || !result.video_id) {
-        throw new Error('Import function did not return required data');
-      }
-
       setShowSuccess(true);
-      
-      // Trigger transcription following the same pattern as VideoUploader
-      setTimeout(async () => {
-        try {
-          const response = await fetch("/api/transcribe", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ 
-              audioUrl: result.file_url,
-              videoId: result.video_id,
-              userId: user.$id
-            }),
-          });
+      router.push('/projects');
 
-          if (!response.ok) {
-            console.error(`Transcription failed: ${response.status} ${response.statusText}`);
-          } else {
-            const transcripts = await response.json();
-            if (transcripts.error) {
-              console.error(`Transcription error: ${transcripts.error}`);
-            }
-          }
-        } catch (transcribeError) {
-          console.error("Failed to start transcription:", transcribeError);
-        }
-        
-        // Redirect to projects page
-        router.push('/projects');
-      }, 1500);
-
-      toast.success('Success', { description: 'Video imported successfully!' });
+      toast.success('Success', { description: 'Import started. You\'ll see it in Projects shortly.' });
     } catch (error: any) {
       console.error('Import error:', error);
       toast.error('Error', {

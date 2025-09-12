@@ -53,7 +53,7 @@ export default function RegisterForm() {
     const result = await register(formData.email, formData.password, formData.name);
 
     if (result.success) {
-      router.push('/dashboard');
+      router.push('/projects');
     } else {
       setError(result.error || 'Registration failed');
     }

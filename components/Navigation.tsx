@@ -8,7 +8,6 @@ const Navigation = () => {
   const pathname = usePathname();
   
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard' },
     { name: 'Upload', path: '/upload' },
     { name: 'Projects', path: '/projects' },
   ];

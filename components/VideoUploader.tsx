@@ -130,9 +130,9 @@ useEffect(() => {
       {selectedFile && (
         <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-sm space-y-1">
           <h3 className="font-medium text-amber-900 dark:text-amber-200 mb-2">Selected File</h3>
-          <p><strong>Name:</strong> {selectedFile.name}</p>
-          <p><strong>Size:</strong> {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
-          <p><strong>Type:</strong> {selectedFile.type}</p>
+          <p className="text-amber-900 dark:text-amber-200"><strong>Name:</strong> {selectedFile.name}</p>
+          <p className="text-amber-900 dark:text-amber-200"><strong>Size:</strong> {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+          <p className="text-amber-900 dark:text-amber-200"><strong>Type:</strong> {selectedFile.type}</p>
         </div>
       )}
 

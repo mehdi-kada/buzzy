@@ -1,6 +1,6 @@
 import os
 import uuid
-from appwrite.client import Client 
+import logging
 from appwrite.services.storage import Storage
 from appwrite.services.databases import Databases
 from appwrite.id import ID
@@ -20,7 +20,12 @@ def upload_file_to_storage(file_path: str, bucket_id: str):
     )
     # constructing the url instead of making another api call
     uploaded_file_id = file_obj["$id"] if isinstance(file_obj, dict) else getattr(file_obj, "$id", file_id)
-    file_url = f"https://fra.cloud.appwrite.io/v1/storage/buckets/{bucket_id}/files/{uploaded_file_id}/view"
+    
+    endpoint = os.environ.get("APPWRITE_ENDPOINT")
+    if not endpoint:
+        raise ValueError("APPWRITE_ENDPOINT environment variable not set.")
+
+    file_url = f"{endpoint}/storage/buckets/{bucket_id}/files/{uploaded_file_id}/view"
     return {"file_id": uploaded_file_id, "file_url": file_url}
 
 
@@ -36,8 +41,8 @@ def cleanup_temp_file(file_path):
         temp_dir = os.path.dirname(file_path)
         if os.path.exists(temp_dir) and not os.listdir(temp_dir):
             os.rmdir(temp_dir)
-    except Exception:
-        pass  # Ignore cleanup errors
+    except Exception as e:
+        logging.warning(f"Error during cleanup of temp file {file_path}: {e}")
 
 
 
@@ -46,8 +51,13 @@ def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_s
     Map yt-dlp metadata to your database schema
     """
     client = get_appwrite_client()
-    DATABASE_ID = '68b2d533003210de565e'
-    TABLE_ID = 'videos'
+    
+    DATABASE_ID = os.environ.get("APPWRITE_DATABASE_ID")
+    TABLE_ID = os.environ.get("APPWRITE_VIDEOS_COLLECTION_ID")
+
+    if not DATABASE_ID or not TABLE_ID:
+        raise ValueError("Missing APPWRITE_DATABASE_ID or APPWRITE_VIDEOS_COLLECTION_ID env variables.")
+
     database = Databases(client)
     # Safely truncate strings to fit database limits
     def truncate_string(value, max_length):
@@ -98,6 +108,6 @@ def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_s
         data=payload
     )
 
-    print("Database insert response:", response)
+    logging.info("Database insert response: %s", response)
 
     return response['$id']

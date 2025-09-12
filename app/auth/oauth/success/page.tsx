@@ -19,7 +19,7 @@ export default function OAuthSuccessPage() {
 
     if (user) {
       redirectedRef.current = true;
-      router.replace('/dashboard');
+      router.replace('/projects');
     } else {
       redirectedRef.current = true;
       router.replace('/auth/login?error=oauth_failed');

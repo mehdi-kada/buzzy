@@ -1,2 +1,3 @@
 appwrite
 yt-dlp
+requests
