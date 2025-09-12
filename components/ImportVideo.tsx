@@ -64,12 +64,13 @@ const ImportVideo = () => {
 
       setShowSuccess(true);
 
-      // Add a 2-second delay before redirecting
       setTimeout(() => {
         router.push('/projects');
       }, 2000);
 
-      toast.success('Success', { description: "Import started. You'll see it in Projects shortly." });
+      toast.success('Import started', {
+        description: "Your video is being processed. You'll receive an email when it's ready. The project will appear on your dashboard soon.",
+      });
     } catch (error: any) {
       console.error('Import error:', error);
       toast.error('Error', {
@@ -112,7 +113,7 @@ const ImportVideo = () => {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/video.mp4"
-            className="w-full border-amber-200 focus-visible:ring-amber-500 dark:border-amber-900/40"
+            className="w-full border-amber-200 focus-visible:ring-amber-500 text-white/80"
             disabled={isLoading}
           />
           <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-300/80">

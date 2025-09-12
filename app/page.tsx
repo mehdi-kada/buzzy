@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   Wand2,
   Settings2,
-  Star
+  Star,
+  MailCheck
 } from 'lucide-react';
 import {
   Accordion,
@@ -174,6 +175,12 @@ export default function Home() {
                 <p className="mt-1 text-amber-800/80 dark:text-amber-300/80">{step.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-4 flex justify-center">
+            <p className="flex items-center gap-2 text-sm text-amber-800/80 dark:text-amber-300/80">
+              <MailCheck className="h-4 w-4 text-amber-600 dark:text-amber-300" aria-hidden="true" />
+              We’ll email you when processing finishes.
+            </p>
           </div>
         </section>
 

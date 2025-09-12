@@ -53,17 +53,12 @@ def main(context):
                     'videoId': video_id,
                     'userId': user_id,
                 }
-                # Fire-and-forget: send the request but don't wait for the full response.
-                # A short timeout ensures the request is sent without waiting for completion.
-                requests.post(transcribe_api_url, json=payload, timeout=3)
-                logging.info("Transcription API request sent.")
+                requests.post(transcribe_api_url, json=payload, timeout=300)
             except requests.exceptions.Timeout:
                 # This is an expected outcome for a fire-and-forget call.
                 logging.info("Transcription API triggered (request timed out as expected).")
             except requests.exceptions.RequestException as e:
-                # Log other request errors, but don't block the function's success.
                 logging.error(f"Failed to trigger transcription API: {e}")
-
         return context.res.json({'file_url': file_url['file_url'], 'file_id': file_url['file_id'], 'video_id': video_id})
 
     except Exception as e:
