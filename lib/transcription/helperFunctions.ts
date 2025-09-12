@@ -141,20 +141,26 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-    model: "openrouter/sonoma-dusk-alpha",
-    messages: [
-        {
-            role: "system",
-            content: openRouterAnalysisPrompt
+        model: "openai/gpt-oss-20b:free",
+        messages: [
+            {
+                role: "system",
+                content: openRouterAnalysisPrompt
+            },
+            {
+                role: "user",
+                content: `Analyze this sentiment analysis data and return viral clip timestamps: ${JSON.stringify(sentimentAnalysisResults)}`
+            },
+        ],
+        max_tokens: 20000,
+        temperature: 0.7,
+        response_format: { type: "json_object" },
+        extra_body: {
+            reasoning: {
+                max_tokens: 8000, // Budget for the reasoning process
+            },
         },
-        {
-            role: "user",
-            content: `Analyze this sentiment analysis data and return viral clip timestamps: ${JSON.stringify(sentimentAnalysisResults)}`
-        },
-    ],
-    temperature: 0.7,
-    response_format: { type: "json_object" }
-});
+    });
 
     console.log("OpenRouter response:", response);
 

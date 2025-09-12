@@ -53,7 +53,7 @@ def main(context):
                     'videoId': video_id,
                     'userId': user_id,
                 }
-                requests.post(transcribe_api_url, json=payload, timeout=300)
+                requests.post(transcribe_api_url, json=payload, timeout=900)
             except requests.exceptions.Timeout:
                 # This is an expected outcome for a fire-and-forget call.
                 logging.info("Transcription API triggered (request timed out as expected).")
