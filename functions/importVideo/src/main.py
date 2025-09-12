@@ -48,21 +48,28 @@ def main(context):
         video_id = prepare_database_metadata(meta_data, user_id, file_name, file_mime_type, file_size)
         logging.info(f"Database metadata created with video ID: {video_id}")
 
-        # Trigger transcription API (best-effort)
-        try:
-            transcribe_api_url = os.environ.get('TRANSCRIBE_API_URL')
-            if transcribe_api_url:
-                logging.info("Triggering transcription API...")
+        # Trigger transcription API
+        transcribe_api_url = os.environ.get('TRANSCRIBE_API_URL')
+        if not transcribe_api_url:
+            logging.error('TRANSCRIBE_API_URL not set. Cannot trigger transcription.')
+        else:
+            try:
+                logging.info(f"Triggering transcription API at {transcribe_api_url}...")
                 payload = {
                     'audioUrl': file_url['file_url'],
                     'videoId': video_id,
                     'userId': user_id,
                 }
-                requests.post(transcribe_api_url, json=payload, timeout=5)
-            else:
-                logging.warning('TRANSCRIBE_API_URL not set. Skipping transcription trigger.')
-        except Exception as e:
-            logging.error(f"Failed to call transcribe API (non-critical): {e}")
+                # Fire-and-forget: send the request but don't wait for the full response.
+                # A short timeout ensures the request is sent without waiting for completion.
+                requests.post(transcribe_api_url, json=payload, timeout=3)
+                logging.info("Transcription API request sent.")
+            except requests.exceptions.Timeout:
+                # This is an expected outcome for a fire-and-forget call.
+                logging.info("Transcription API triggered (request timed out as expected).")
+            except requests.exceptions.RequestException as e:
+                # Log other request errors, but don't block the function's success.
+                logging.error(f"Failed to trigger transcription API: {e}")
 
         return context.res.json({'file_url': file_url['file_url'], 'file_id': file_url['file_id'], 'video_id': video_id})
 

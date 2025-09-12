@@ -21,9 +21,9 @@ def upload_file_to_storage(file_path: str, bucket_id: str):
     # constructing the url instead of making another api call
     uploaded_file_id = file_obj["$id"] if isinstance(file_obj, dict) else getattr(file_obj, "$id", file_id)
     
-    endpoint = os.environ.get("APPWRITE_ENDPOINT")
+    endpoint = os.environ.get("APPWRITE_FUNCTION_API_ENDPOINT")
     if not endpoint:
-        raise ValueError("APPWRITE_ENDPOINT environment variable not set.")
+        raise ValueError("APPWRITE_FUNCTION_API_ENDPOINT environment variable not set.")
 
     file_url = f"{endpoint}/storage/buckets/{bucket_id}/files/{uploaded_file_id}/view"
     return {"file_id": uploaded_file_id, "file_url": file_url}
@@ -52,11 +52,11 @@ def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_s
     """
     client = get_appwrite_client()
     
-    DATABASE_ID = os.environ.get("APPWRITE_DATABASE_ID")
-    TABLE_ID = os.environ.get("APPWRITE_VIDEOS_COLLECTION_ID")
+    DATABASE_ID = os.environ.get("APPWRITE_FUNCTION_DATABASE_ID")
 
-    if not DATABASE_ID or not TABLE_ID:
-        raise ValueError("Missing APPWRITE_DATABASE_ID or APPWRITE_VIDEOS_COLLECTION_ID env variables.")
+
+    if not DATABASE_ID:
+        raise ValueError("Missing APPWRITE_FUNCTION_DATABASE_ID env variables.")
 
     database = Databases(client)
     # Safely truncate strings to fit database limits
@@ -103,7 +103,7 @@ def prepare_database_metadata(yt_metadata, user_id, file_name, mime_type, file_s
 
     response = database.create_document(
         database_id=DATABASE_ID,
-        collection_id=TABLE_ID,
+        collection_id="videos",
         document_id=ID.unique(),
         data=payload
     )

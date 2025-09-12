@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 
 export default function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,9 +30,11 @@ export default function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={isLoading}
-      className="text-sm font-medium text-gray-600 hover:text-amber-700 dark:text-gray-300 dark:hover:text-amber-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded-md px-2 py-1"
+      aria-label="Logout"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-amber-700 dark:text-gray-300 dark:hover:text-amber-300 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-md px-2 py-1 disabled:opacity-60"
     >
-      {isLoading ? 'Logging out...' : 'Logout'}
+      <LogOut className="h-4 w-4" aria-hidden="true" />
+      {isLoading ? 'Signing out…' : 'Logout'}
     </button>
   );
 }

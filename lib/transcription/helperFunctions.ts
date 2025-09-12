@@ -9,29 +9,48 @@ export async function createTranscript(audio_url:string, apiKey:string) {
     const client = new AssemblyAI({ apiKey: apiKey });
     
     try {
-        const transcriptData = await client.transcripts.transcribe({
+        // 1. Submit the file for transcription
+        let transcript = await client.transcripts.transcribe({
             audio_url: audio_url,
             sentiment_analysis: true,
             language_detection: true,
             speaker_labels: true,
         });
-        console.log("Created transcript with ID:", transcriptData.id);
-        console.log("the highlights of the video are : ", transcriptData.auto_highlights_result);
-        const srtString = await client.transcripts.subtitles(transcriptData.id, "srt", 32);
+        console.log("Submitted transcript for processing with ID:", transcript.id);
+
+        // 2. Poll for completion
+        while (transcript.status !== 'completed' && transcript.status !== 'error') {
+            // Wait for 5 seconds before checking the status again
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            transcript = await client.transcripts.get(transcript.id);
+            console.log(`Current transcript status [${transcript.id}]: ${transcript.status}`);
+        }
+
+        // 3. Handle error status
+        if (transcript.status === 'error') {
+            // This will throw the specific error message from AssemblyAI
+            throw new Error(`Transcription failed: ${transcript.error}`);
+        }
+
+        // 4. On completion, fetch subtitles and proceed
+        console.log("Transcript completed successfully.");
+        console.log("Auto highlights:", transcript.auto_highlights_result);
+        
+        const srtString = await client.transcripts.subtitles(transcript.id, "srt", 32);
         const strFile = Buffer.from(srtString);
+        
         const result = await storage.createFile(
             process.env.NEXT_PUBLIC_APPWRITE_TRANSCRIPT_BUCKET_ID!,
             ID.unique(),
-            new File([strFile], `subtitles_${transcriptData.id}.srt`, { type: 'application/x-subrip' })
+            new File([strFile], `subtitles_${transcript.id}.srt`, { type: 'application/x-subrip' })
         );
-        return { transcriptData, srtUrl: result.$id };
+        
+        return { transcriptData: transcript, srtUrl: result.$id };
+
     } catch (error) {
-        console.error("Error creating transcript or fetching subtitles:", error);
+        console.error("An error occurred during the transcription process:", error);
         throw error;
     }
-
-
-     
 }
 
 // Helper to prepare the database payload

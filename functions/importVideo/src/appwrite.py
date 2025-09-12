@@ -14,15 +14,14 @@ def get_appwrite_client():
     
     client = Client()
     
-    endpoint = os.environ.get("APPWRITE_ENDPOINT")
-    project_id = os.environ.get("APPWRITE_PROJECT_ID")
-    api_key = os.environ.get("APPWRITE_API_KEY")
-    
+    endpoint = os.environ.get("APPWRITE_FUNCTION_API_ENDPOINT")
+    project_id = os.environ.get("APPWRITE_FUNCTION_PROJECT_ID")
+    api_key = os.environ.get("APPWRITE_FUNCTION_API_KEY")
 
     if not all([endpoint, project_id, api_key]):
         raise ValueError(
             "Missing one or more required Appwrite environment variables: "
-            "APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY"
+            "APPWRITE_FUNCTION_API_ENDPOINT, APPWRITE_FUNCTION_PROJECT_ID, APPWRITE_FUNCTION_API_KEY"
         )
 
     client.set_endpoint(endpoint)

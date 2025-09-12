@@ -10,7 +10,7 @@ import { relativeCreatedAt, formatViewCount, formatDuration } from '@/lib/projec
 
 
 export default function ProjectCard({ project }: { project: ProjectCardData }) {
-  const normalized = (project.status || 'draft').toLowerCase();
+  const normalized = (project.status || 'processing').toLowerCase();
   const status = statusConfig[normalized] || statusConfig.default;
   const isProcessing = normalized === 'processing' || normalized === 'uploaded';
   const isClickable = !isProcessing;
