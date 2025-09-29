@@ -141,7 +141,7 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
     });
 
     const response = await openai.chat.completions.create({
-        model: "openai/gpt-oss-20b:free",
+        model: "x-ai/grok-4-fast:free",
         messages: [
             {
                 role: "system",
@@ -160,9 +160,8 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
                 max_tokens: 8000, // Budget for the reasoning process
             },
         },
-    });
+    } as any);
 
-    console.log("OpenRouter response:", response);
 
     let content = response.choices[0]?.message?.content || "[]";
     
@@ -177,22 +176,18 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
         content = content.slice(0, -3);
     }
     
-    // Trim whitespace
     content = content.trim();
     
-    // Validate that it's valid JSON and extract clips array
+
     try {
         const parsed = JSON.parse(content);
         console.log("Parsed OpenRouter content:", parsed);
-        // If it's already an array, return it
         if (Array.isArray(parsed)) {
             return JSON.stringify(parsed);
         }
-        // If it's an object with clips array, extract it
         if (parsed.clips && Array.isArray(parsed.clips)) {
             return JSON.stringify(parsed.clips);
         }
-        // If it's an object but no clips array, try to find any array property
         for (const key in parsed) {
             if (Array.isArray(parsed[key])) {
                 return JSON.stringify(parsed[key]);

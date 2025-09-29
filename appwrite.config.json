@@ -6,7 +6,7 @@
             "$id": "68b85979001a3ce7abfd",
             "name": "VideoProcessor",
             "runtime": "node-22",
-            "specification": "s-1vcpu-1gb",
+            "specification": "s-4vcpu-4gb",
             "execute": [
                 "any"
             ],
@@ -71,7 +71,7 @@
             "enabled": true,
             "logging": true,
             "entrypoint": "src/main.js",
-            "commands": "npm install",
+            "commands": "apk add --no-cache ffmpeg fontconfig ttf-dejavu && npm install",
             "path": "functions/VideoProcessor"
         },
         {
