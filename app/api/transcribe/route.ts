@@ -10,6 +10,7 @@ import {
 import type { TranscribeRequest, TranscribeResponse, APIErrorResponse } from '@/types';
 
 export async function POST(request: Request): Promise<Response> {
+    
     try {
         const body: TranscribeRequest = await request.json();
         const { audioUrl, videoId, userId } = body;
@@ -46,9 +47,7 @@ export async function POST(request: Request): Promise<Response> {
         let clipsTimestamps = "";
         try {
             if (transcriptData.sentiment_analysis_results && transcriptData.sentiment_analysis_results.length > 0) {
-                console.log("Analyzing sentiment data with OpenRouter...");
                 clipsTimestamps = await openRouterAnalysis(transcriptData.sentiment_analysis_results);
-                console.log("OpenRouter analysis completed");
             }
         } catch (openRouterError) {
             console.error("OpenRouter analysis error:", openRouterError);

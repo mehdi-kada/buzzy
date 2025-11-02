@@ -129,19 +129,16 @@ export function formatErrorResponse(error: any) {
 }
 
 export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promise<string> {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    
+    const apiKey = process.env.CEREBRAS_API_KEY;
     if (!apiKey) {
-        throw new Error("OPENROUTER_API_KEY is not set in environment variables");
+        throw new Error("CEREBRAS_API_KEY is not set in environment variables");
     }
-
     const openai = new OpenAI({
         apiKey: apiKey,
-        baseURL: "https://openrouter.ai/api/v1",
+        baseURL: "https://api.cerebras.ai/v1",
     });
-
     const response = await openai.chat.completions.create({
-        model: "x-ai/grok-4-fast:free",
+        model: "qwen-3-235b-a22b-thinking-2507",
         messages: [
             {
                 role: "system",
@@ -155,13 +152,8 @@ export async function openRouterAnalysis(sentimentAnalysisResults: any[]): Promi
         max_tokens: 20000,
         temperature: 0.7,
         response_format: { type: "json_object" },
-        extra_body: {
-            reasoning: {
-                max_tokens: 8000, // Budget for the reasoning process
-            },
-        },
-    } as any);
 
+    } as any);
 
     let content = response.choices[0]?.message?.content || "[]";
     
